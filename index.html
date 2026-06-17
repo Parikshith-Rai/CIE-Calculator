@@ -1,0 +1,256 @@
+f<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NMIT CIE & SGPA Calculator | Nitte Meenakshi Institute of Technology</title>
+  <meta name="description" content="Calculate and analyze CIE marks, predict target SEE scores, and simulate SGPA for Non-Integrated and Integrated courses at Nitte Meenakshi Institute of Technology (NMIT).">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="branding">
+        <div class="brand-text">
+          <h1 class="main-title">NMIT CIE Hub</h1>
+          <p class="subtitle">Nitte Meenakshi Institute of Technology</p>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <button id="theme-toggle" class="btn-icon" aria-label="Toggle light and dark theme">
+          <!-- Sun Icon -->
+          <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <!-- Moon Icon -->
+          <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+        <button id="btn-info" class="btn-secondary">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          CIE Guidelines
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Grid Layout -->
+  <main class="app-container">
+    
+    <!-- Left Column: Statistics & Simulator Panel -->
+    <aside class="dashboard-sidebar">
+      
+      <!-- Summary Statistics Card -->
+      <section class="glass-card stat-card">
+        <h2 class="card-title">CIE Overview</h2>
+        <div class="cie-avg-display">
+          <span id="overall-cie-value" class="cie-avg-value">0.0</span>
+          <span class="cie-avg-label">Avg CIE Marks</span>
+          <span class="cie-avg-sub">out of 50</span>
+        </div>
+        
+        <div class="stat-grid">
+          <div class="stat-item">
+            <span class="stat-label">Total Credits</span>
+            <span id="total-credits" class="stat-value">0</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Courses Added</span>
+            <span id="course-count" class="stat-value">0</span>
+          </div>
+          <div class="stat-item span-2">
+            <span class="stat-label">SEE Eligibility Status</span>
+            <span id="eligibility-status" class="status-badge status-good">All Eligible</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SGPA Simulator Card -->
+      <section class="glass-card gpa-card">
+        <div class="card-header-with-action">
+          <h2 class="card-title">SGPA Simulator</h2>
+          <span class="badge-accent">10-Point Scale</span>
+        </div>
+        <p class="card-desc">Simulate your SGPA by predicting your marks for the Semester End Exams (SEE).</p>
+        
+        <div class="gpa-display">
+          <div class="gpa-score-container">
+            <span id="sgpa-score" class="gpa-score">0.00</span>
+            <span class="gpa-label">Projected SGPA</span>
+          </div>
+          <div id="sgpa-progress-bar" class="gpa-bar-fill"></div>
+        </div>
+
+        <div id="sgpa-breakdown" class="sgpa-breakdown-list">
+          <!-- Dynamically populated course grade preview items -->
+        </div>
+
+        <div class="sidebar-actions">
+          <button id="btn-export-pdf" class="btn-primary w-full">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Export PDF Report
+          </button>
+        </div>
+      </section>
+
+      <!-- Preset Syllabus Templates -->
+      <section class="glass-card preset-card">
+        <h2 class="card-title">Load Syllabus Preset</h2>
+        <p class="card-desc">Load standard semester schedules to quickly calculate your grades without manual typing.</p>
+        <div class="presets-buttons">
+          <button id="btn-preset-1" class="btn-outline text-sm">CSE 1st Sem</button>
+          <button id="btn-preset-2" class="btn-outline text-sm">CSE 3rd Sem</button>
+          <button id="btn-preset-reset" class="btn-danger-outline text-sm">Clear All</button>
+        </div>
+      </section>
+    </aside>
+
+    <!-- Right Column: Course List and Marks Input -->
+    <article class="course-board">
+      <div class="board-header">
+        <h2 class="section-heading">My Courses</h2>
+        <div class="board-actions">
+          <button id="btn-add-non-integrated" class="btn-secondary">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            + Theory Course
+          </button>
+          <button id="btn-add-integrated" class="btn-primary">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            + Integrated (Lab) Course
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State UI -->
+      <div id="courses-empty-state" class="glass-card empty-state">
+        <div class="empty-icon">🎓</div>
+        <h3>No courses added yet</h3>
+        <p>Click the buttons above to add a theory (non-integrated) or integrated course to start calculating your CIE.</p>
+        <div class="empty-actions">
+          <button id="btn-empty-demo" class="btn-secondary">Load Demo Semester</button>
+        </div>
+      </div>
+
+      <!-- Course cards container -->
+      <div id="course-cards-list" class="course-list-container">
+        <!-- Dynamically rendered course cards will go here -->
+      </div>
+    </article>
+  </main>
+
+  <!-- Guidelines Modal -->
+  <dialog id="guidelines-modal" class="modal-dialog">
+    <div class="modal-content glass-card">
+      <div class="modal-header">
+        <h2>NMIT CIE Guidelines & Evaluation Scheme</h2>
+        <button id="btn-close-modal" class="btn-icon" aria-label="Close modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <h3>Continuous Internal Evaluation (CIE) split-up:</h3>
+        
+        <div class="guidelines-grids">
+          <div class="guideline-card non-integrated-g">
+            <h4>1. Non-Integrated Courses (Theory Only)</h4>
+            <p>Total CIE is out of <strong>50 marks</strong> calculated as:</p>
+            <ul>
+              <li><strong>LA-1:</strong> Learning Assignment 1 (Max 10 Marks)</li>
+              <li><strong>LA-2:</strong> Learning Assignment 2 (Max 10 Marks)</li>
+              <li><strong>Mid Sem-1 (MSE1):</strong> Scaled to 15 Marks (Conducted for 50)</li>
+              <li><strong>Mid Sem-2 (MSE2):</strong> Scaled to 15 Marks (Conducted for 50)</li>
+            </ul>
+            <div class="formula-box">
+              CIE = LA1 (10) + LA2 (10) + MSE1 (scaled to 15) + MSE2 (scaled to 15)
+            </div>
+          </div>
+          
+          <div class="guideline-card integrated-g">
+            <h4>2. Integrated Courses (Theory + Lab)</h4>
+            <p>Total CIE is out of <strong>50 marks</strong> calculated as:</p>
+            <ul>
+              <li><strong>Mid Sem-1 (MSE1):</strong> Scaled to 15 Marks (Conducted for 50)</li>
+              <li><strong>Mid Sem-2 (MSE2):</strong> Scaled to 15 Marks (Conducted for 50)</li>
+              <li><strong>Lab Marks:</strong> Continuous assessment of lab experiments + record + test (Max 20 Marks)</li>
+            </ul>
+            <div class="formula-box">
+              CIE = MSE1 (scaled to 15) + MSE2 (scaled to 15) + Lab (20)
+            </div>
+          </div>
+        </div>
+
+        <div class="eligibility-callout">
+          <h5>⚠️ SEE Exam Eligibility Criterion</h5>
+          <p>A student must secure a minimum of <strong>40% of CIE marks</strong> (i.e., <strong>20 out of 50</strong>) in each course to become eligible to appear for the Semester End Examination (SEE) in that course.</p>
+        </div>
+
+        <h3>NMIT Letter Grades & Point Scalings</h3>
+        <div class="table-wrapper">
+          <table class="grades-table">
+            <thead>
+              <tr>
+                <th>Total Marks (CIE + SEE)</th>
+                <th>Letter Grade</th>
+                <th>Grade Points</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="g-o"><td>&ge; 90</td><td>O (Outstanding)</td><td>10</td><td>Pass</td></tr>
+              <tr class="g-ap"><td>80 - 89</td><td>A+ (Excellent)</td><td>9</td><td>Pass</td></tr>
+              <tr class="g-a"><td>70 - 79</td><td>A (Very Good)</td><td>8</td><td>Pass</td></tr>
+              <tr class="g-bp"><td>60 - 69</td><td>B+ (Good)</td><td>7</td><td>Pass</td></tr>
+              <tr class="g-b"><td>50 - 59</td><td>B (Above Average)</td><td>6</td><td>Pass</td></tr>
+              <tr class="g-c"><td>45 - 49</td><td>C (Average)</td><td>5</td><td>Pass</td></tr>
+              <tr class="g-p"><td>40 - 44</td><td>P (Pass)</td><td>4</td><td>Pass</td></tr>
+              <tr class="g-f"><td>&lt; 40</td><td>F (Fail)</td><td>0</td><td>Fail / Fail to eligible</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Toast Notification System -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- JavaScript Code -->
+  <script src="app.js"></script>
+</body>
+</html>
