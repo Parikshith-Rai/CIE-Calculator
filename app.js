@@ -20,7 +20,7 @@ const toastContainer = document.getElementById('toast-container');
 
 // Sidebar summary selectors
 const overallCieValue = document.getElementById('overall-cie-value');
-
+const overallCieRing = document.getElementById('overall-cie-ring');
 const totalCreditsSpan = document.getElementById('total-credits');
 const courseCountSpan = document.getElementById('course-count');
 const eligibilityStatusSpan = document.getElementById('eligibility-status');
@@ -38,17 +38,17 @@ const btnPresetReset = document.getElementById('btn-preset-reset');
 const PRESETS = {
   cse1: [
     { name: "Engineering Mathematics-I", type: "non-integrated", credits: 4, la1: 8, la2: 8, mse1: 40, mse2: 42, lab: 0, seePredicted: 80 },
-    { name: "Applied Physics", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 38, mse2: 40, lab: 18, seePredicted: 75 },
+    { name: "Applied Physics", type: "integrated", credits: 4, la1: 8, la2: 8, mse1: 38, mse2: 40, lab: 45, seePredicted: 75 },
     { name: "Basic Electrical Engineering", type: "non-integrated", credits: 3, la1: 9, la2: 7, mse1: 35, mse2: 38, lab: 0, seePredicted: 70 },
     { name: "Elements of Civil Engineering", type: "non-integrated", credits: 3, la1: 7, la2: 8, mse1: 30, mse2: 32, lab: 0, seePredicted: 65 },
     { name: "Engineering Graphics", type: "non-integrated", credits: 3, la1: 8, la2: 9, mse1: 42, mse2: 40, lab: 0, seePredicted: 85 }
   ],
   cse3: [
     { name: "Discrete Mathematical Structures", type: "non-integrated", credits: 3, la1: 9, la2: 8, mse1: 45, mse2: 42, lab: 0, seePredicted: 88 },
-    { name: "Data Structures & Applications", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 40, mse2: 38, lab: 19, seePredicted: 82 },
+    { name: "Data Structures & Applications", type: "integrated", credits: 4, la1: 9, la2: 9, mse1: 40, mse2: 38, lab: 48, seePredicted: 82 },
     { name: "Computer Organization & Arch.", type: "non-integrated", credits: 3, la1: 8, la2: 8, mse1: 35, mse2: 37, lab: 0, seePredicted: 72 },
-    { name: "Analog & Digital Electronics", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 32, mse2: 35, lab: 17, seePredicted: 68 },
-    { name: "Object Oriented Programming", type: "integrated", credits: 3, la1: 0, la2: 0, mse1: 38, mse2: 42, lab: 18, seePredicted: 80 }
+    { name: "Analog & Digital Electronics", type: "integrated", credits: 4, la1: 7, la2: 8, mse1: 32, mse2: 35, lab: 42, seePredicted: 68 },
+    { name: "Object Oriented Programming", type: "integrated", credits: 3, la1: 8, la2: 9, mse1: 38, mse2: 42, lab: 45, seePredicted: 80 }
   ]
 };
 
@@ -115,14 +115,17 @@ function loadState() {
 function calculateCourseCIE(course) {
   const mse1Scaled = (course.mse1 || 0) * 0.3;
   const mse2Scaled = (course.mse2 || 0) * 0.3;
+  const la1Val = course.la1 || 0;
+  const la2Val = course.la2 || 0;
   
   if (course.type === 'non-integrated') {
-    const la1Val = course.la1 || 0;
-    const la2Val = course.la2 || 0;
     return parseFloat((la1Val + la2Val + mse1Scaled + mse2Scaled).toFixed(1));
   } else {
     const labVal = course.lab || 0;
-    return parseFloat((mse1Scaled + mse2Scaled + labVal).toFixed(1));
+    const theoryCIE = la1Val + la2Val + mse1Scaled + mse2Scaled;
+    const finalTheory = theoryCIE * 0.6;
+    const finalPractical = labVal * 0.4;
+    return parseFloat((finalTheory + finalPractical).toFixed(1));
   }
 }
 
@@ -138,8 +141,8 @@ function getGradePoints(totalMarks) {
   if (totalMarks >= 80) return { grade: 'A+', points: 9, class: 'g-ap' };
   if (totalMarks >= 70) return { grade: 'A', points: 8, class: 'g-a' };
   if (totalMarks >= 60) return { grade: 'B+', points: 7, class: 'g-bp' };
-  if (totalMarks >= 50) return { grade: 'B', points: 6, class: 'g-b' };
-  if (totalMarks >= 45) return { grade: 'C', points: 5, class: 'g-c' };
+  if (totalMarks >= 55) return { grade: 'B', points: 6, class: 'g-b' };
+  if (totalMarks >= 50) return { grade: 'C', points: 5, class: 'g-c' };
   if (totalMarks >= 40) return { grade: 'P', points: 4, class: 'g-p' };
   return { grade: 'F', points: 0, class: 'g-f' };
 }
@@ -161,8 +164,8 @@ function getSEETargets(cie) {
     { name: 'A+', minTotal: 80 },
     { name: 'A', minTotal: 70 },
     { name: 'B+', minTotal: 60 },
-    { name: 'B', minTotal: 50 },
-    { name: 'C', minTotal: 45 },
+    { name: 'B', minTotal: 55 },
+    { name: 'C', minTotal: 50 },
     { name: 'P', minTotal: 40 }
   ];
   
@@ -275,10 +278,18 @@ function renderCourseBoard() {
         </div>
       `;
     } else {
-      // Integrated (MSE1, MSE2, Lab)
+      // Integrated (LA1, LA2, MSE1, MSE2, Lab)
       bodyHTML = `
         <div class="course-card-body">
           <div class="marks-inputs-grid">
+            <div class="input-field-group">
+              <label>LA-1 <span class="label-max-tag">Max 10</span></label>
+              <input type="number" class="input-mark input-la1" value="${course.la1}" min="0" max="10" step="0.5" aria-label="LA-1 marks">
+            </div>
+            <div class="input-field-group">
+              <label>LA-2 <span class="label-max-tag">Max 10</span></label>
+              <input type="number" class="input-mark input-la2" value="${course.la2}" min="0" max="10" step="0.5" aria-label="LA-2 marks">
+            </div>
             <div class="input-field-group">
               <label>MSE-1 <span class="label-max-tag">Max 50</span></label>
               <div class="input-numeric-wrapper">
@@ -294,8 +305,11 @@ function renderCourseBoard() {
               </div>
             </div>
             <div class="input-field-group span-2">
-              <label>Lab Assessment <span class="label-max-tag">Max 20</span></label>
-              <input type="number" class="input-mark input-lab" value="${course.lab}" min="0" max="20" step="0.5" aria-label="Lab marks">
+              <label>Lab Assessment <span class="label-max-tag">Max 50</span></label>
+              <div class="input-numeric-wrapper">
+                <input type="number" class="input-mark input-lab" value="${course.lab}" min="0" max="50" step="0.5" aria-label="Lab marks">
+                <span class="scaling-info">→ ${(course.lab * 0.4).toFixed(1)}</span>
+              </div>
             </div>
           </div>
           
@@ -430,7 +444,11 @@ function bindCardEvents(cardElement, courseId) {
         const scalingSpan = inputEl.nextElementSibling;
         if (scalingSpan) scalingSpan.innerText = `→ ${(val * 0.3).toFixed(1)}`;
       }
-      if (inputEl.classList.contains('input-lab')) course.lab = val;
+      if (inputEl.classList.contains('input-lab')) {
+        course.lab = val;
+        const scalingSpan = inputEl.nextElementSibling;
+        if (scalingSpan) scalingSpan.innerText = `→ ${(val * 0.4).toFixed(1)}`;
+      }
       
       // Update this card's CIE score and UI components reactively
       const newCie = calculateCourseCIE(course);
@@ -502,7 +520,7 @@ function bindCardEvents(cardElement, courseId) {
 function renderSidebar() {
   if (courses.length === 0) {
     overallCieValue.innerText = '0.0';
-
+    overallCieRing.style.strokeDashoffset = '314.15';
     totalCreditsSpan.innerText = '0';
     courseCountSpan.innerText = '0';
     eligibilityStatusSpan.innerText = 'No Courses';
@@ -534,7 +552,9 @@ function renderSidebar() {
   const avgCie = parseFloat((totalCie / courses.length).toFixed(1));
   overallCieValue.innerText = avgCie;
   
-
+  // Calculate stroke dashoffset for radial gauge (314.15 total dash, CIE is out of 50)
+  const offset = 314.15 - (314.15 * (avgCie / 50));
+  overallCieRing.style.strokeDashoffset = offset;
   
   // Set stats fields
   totalCreditsSpan.innerText = totalCredits;
@@ -643,11 +663,11 @@ function addCourse(type) {
     name: type === 'non-integrated' ? `Theory Course ${courses.length + 1}` : `Integrated Course ${courses.length + 1}`,
     type: type,
     credits: 4,
-    la1: type === 'non-integrated' ? 8 : 0,
-    la2: type === 'non-integrated' ? 8 : 0,
+    la1: type === 'non-integrated' ? 8 : 8,
+    la2: type === 'non-integrated' ? 8 : 8,
     mse1: 40,
     mse2: 40,
-    lab: type === 'integrated' ? 16 : 0,
+    lab: type === 'integrated' ? 40 : 0,
     seePredicted: 80
   };
   

@@ -1,4 +1,4 @@
-f<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
@@ -66,10 +66,15 @@ f<!DOCTYPE html>
       <!-- Summary Statistics Card -->
       <section class="glass-card stat-card">
         <h2 class="card-title">CIE Overview</h2>
-        <div class="cie-avg-display">
-          <span id="overall-cie-value" class="cie-avg-value">0.0</span>
-          <span class="cie-avg-label">Avg CIE Marks</span>
-          <span class="cie-avg-sub">out of 50</span>
+        <div class="radial-progress-container">
+          <svg class="radial-progress" viewBox="0 0 120 120">
+            <circle class="circle-bg" cx="60" cy="60" r="50" fill="none"></circle>
+            <circle id="overall-cie-ring" class="circle-progress" cx="60" cy="60" r="50" fill="none"></circle>
+          </svg>
+          <div class="radial-label">
+            <span id="overall-cie-value">0.0</span>
+            <span class="radial-sub">Avg CIE Marks</span>
+          </div>
         </div>
         
         <div class="stat-grid">
@@ -205,12 +210,11 @@ f<!DOCTYPE html>
             <h4>2. Integrated Courses (Theory + Lab)</h4>
             <p>Total CIE is out of <strong>50 marks</strong> calculated as:</p>
             <ul>
-              <li><strong>Mid Sem-1 (MSE1):</strong> Scaled to 15 Marks (Conducted for 50)</li>
-              <li><strong>Mid Sem-2 (MSE2):</strong> Scaled to 15 Marks (Conducted for 50)</li>
-              <li><strong>Lab Marks:</strong> Continuous assessment of lab experiments + record + test (Max 20 Marks)</li>
+              <li><strong>Theory Part:</strong> LA (20) + MSE1 (Scaled to 15) + MSE2 (Scaled to 15) = Max 50</li>
+              <li><strong>Practical Part:</strong> Lab assessment = Max 50</li>
             </ul>
-            <div class="formula-box">
-              CIE = MSE1 (scaled to 15) + MSE2 (scaled to 15) + Lab (20)
+            <div class="formula-box" style="font-size: 0.9em;">
+              CIE = (Theory &times; 0.6) + (Practical &times; 0.4)
             </div>
           </div>
         </div>
@@ -236,9 +240,9 @@ f<!DOCTYPE html>
               <tr class="g-ap"><td>80 - 89</td><td>A+ (Excellent)</td><td>9</td><td>Pass</td></tr>
               <tr class="g-a"><td>70 - 79</td><td>A (Very Good)</td><td>8</td><td>Pass</td></tr>
               <tr class="g-bp"><td>60 - 69</td><td>B+ (Good)</td><td>7</td><td>Pass</td></tr>
-              <tr class="g-b"><td>50 - 59</td><td>B (Above Average)</td><td>6</td><td>Pass</td></tr>
-              <tr class="g-c"><td>45 - 49</td><td>C (Average)</td><td>5</td><td>Pass</td></tr>
-              <tr class="g-p"><td>40 - 44</td><td>P (Pass)</td><td>4</td><td>Pass</td></tr>
+              <tr class="g-b"><td>55 - 59</td><td>B (Above Average)</td><td>6</td><td>Pass</td></tr>
+              <tr class="g-c"><td>50 - 54</td><td>C (Average)</td><td>5</td><td>Pass</td></tr>
+              <tr class="g-p"><td>40 - 49</td><td>P (Pass)</td><td>4</td><td>Pass</td></tr>
               <tr class="g-f"><td>&lt; 40</td><td>F (Fail)</td><td>0</td><td>Fail / Fail to eligible</td></tr>
             </tbody>
           </table>
