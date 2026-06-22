@@ -30,26 +30,30 @@ const sgpaBreakdownList = document.getElementById('sgpa-breakdown');
 const btnExportPdf = document.getElementById('btn-export-pdf');
 
 // Presets selectors
-const btnPreset1 = document.getElementById('btn-preset-1');
-const btnPreset2 = document.getElementById('btn-preset-2');
+const btnLoadPreset = document.getElementById('btn-load-preset');
+const presetBranch = document.getElementById('preset-branch');
+const presetSemester = document.getElementById('preset-semester');
 const btnPresetReset = document.getElementById('btn-preset-reset');
 
 // --- PRESET DATABASES ---
 const PRESETS = {
-  cse1: [
-    { name: "Engineering Mathematics-I", type: "non-integrated", credits: 4, la1: 8, la2: 8, mse1: 40, mse2: 42, lab: 0, seePredicted: 80 },
-    { name: "Applied Physics", type: "integrated", credits: 4, la1: 8, la2: 8, mse1: 38, mse2: 40, lab: 45, seePredicted: 75 },
-    { name: "Basic Electrical Engineering", type: "non-integrated", credits: 3, la1: 9, la2: 7, mse1: 35, mse2: 38, lab: 0, seePredicted: 70 },
-    { name: "Elements of Civil Engineering", type: "non-integrated", credits: 3, la1: 7, la2: 8, mse1: 30, mse2: 32, lab: 0, seePredicted: 65 },
-    { name: "Engineering Graphics", type: "non-integrated", credits: 3, la1: 8, la2: 9, mse1: 42, mse2: 40, lab: 0, seePredicted: 85 }
-  ],
-  cse3: [
-    { name: "Discrete Mathematical Structures", type: "non-integrated", credits: 3, la1: 9, la2: 8, mse1: 45, mse2: 42, lab: 0, seePredicted: 88 },
-    { name: "Data Structures & Applications", type: "integrated", credits: 4, la1: 9, la2: 9, mse1: 40, mse2: 38, lab: 48, seePredicted: 82 },
-    { name: "Computer Organization & Arch.", type: "non-integrated", credits: 3, la1: 8, la2: 8, mse1: 35, mse2: 37, lab: 0, seePredicted: 72 },
-    { name: "Analog & Digital Electronics", type: "integrated", credits: 4, la1: 7, la2: 8, mse1: 32, mse2: 35, lab: 42, seePredicted: 68 },
-    { name: "Object Oriented Programming", type: "integrated", credits: 3, la1: 8, la2: 9, mse1: 38, mse2: 42, lab: 45, seePredicted: 80 }
-  ]
+  "CSE": {
+    "1": [
+      { name: "Engineering Mathematics-I", type: "non-integrated", credits: 4, la1: 8, la2: 8, mse1: 40, mse2: 42, lab: 0, seePredicted: 80 },
+      { name: "Applied Physics", type: "integrated", credits: 4, la1: 8, la2: 8, mse1: 38, mse2: 40, lab: 45, seePredicted: 75 },
+      { name: "Basic Electrical Engineering", type: "non-integrated", credits: 3, la1: 9, la2: 7, mse1: 35, mse2: 38, lab: 0, seePredicted: 70 },
+      { name: "Elements of Civil Engineering", type: "non-integrated", credits: 3, la1: 7, la2: 8, mse1: 30, mse2: 32, lab: 0, seePredicted: 65 },
+      { name: "Engineering Graphics", type: "non-integrated", credits: 3, la1: 8, la2: 9, mse1: 42, mse2: 40, lab: 0, seePredicted: 85 }
+    ],
+    "3": [
+      { name: "Discrete Mathematical Structures", type: "non-integrated", credits: 3, la1: 9, la2: 8, mse1: 45, mse2: 42, lab: 0, seePredicted: 88 },
+      { name: "Data Structures & Applications", type: "integrated", credits: 4, la1: 9, la2: 9, mse1: 40, mse2: 38, lab: 48, seePredicted: 82 },
+      { name: "Computer Organization & Arch.", type: "non-integrated", credits: 3, la1: 8, la2: 8, mse1: 35, mse2: 37, lab: 0, seePredicted: 72 },
+      { name: "Analog & Digital Electronics", type: "integrated", credits: 4, la1: 7, la2: 8, mse1: 32, mse2: 35, lab: 42, seePredicted: 68 },
+      { name: "Object Oriented Programming", type: "integrated", credits: 3, la1: 8, la2: 9, mse1: 38, mse2: 42, lab: 45, seePredicted: 80 }
+    ]
+  }
+  // Other branches can be added here
 };
 
 // --- INITIALIZATION ---
@@ -68,11 +72,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // Set up add buttons
   btnAddNonIntegrated.addEventListener('click', () => addCourse('non-integrated'));
   btnAddIntegrated.addEventListener('click', () => addCourse('integrated'));
-  btnEmptyDemo.addEventListener('click', () => loadPreset('cse1'));
+  btnEmptyDemo.addEventListener('click', () => loadPreset('CSE', '1'));
   
   // Presets controls
-  btnPreset1.addEventListener('click', () => loadPreset('cse1'));
-  btnPreset2.addEventListener('click', () => loadPreset('cse3'));
+  btnLoadPreset.addEventListener('click', () => {
+    const branch = presetBranch.value;
+    const semester = presetSemester.value;
+    
+    if (!branch || !semester) {
+      showToast('Please select both Branch and Semester', 'warning');
+      return;
+    }
+    
+    loadPreset(branch, semester);
+  });
   btnPresetReset.addEventListener('click', clearAllCourses);
   
   // PDF Export
@@ -216,7 +229,7 @@ function renderCourseBoard() {
     let headerHTML = `
       <div class="course-card-header">
         <div class="course-meta-inputs">
-          <input type="text" class="input-course-name" value="${course.name}" placeholder="Enter Course Name" aria-label="Course Name">
+          <textarea class="input-course-name" rows="2" placeholder="Enter Course Name" aria-label="Course Name">${course.name}</textarea>
           <div class="input-field-group">
             <input type="number" class="input-credits" value="${course.credits}" min="1" max="10" placeholder="Credits" title="Course Credits" aria-label="Course Credits">
           </div>
@@ -705,18 +718,23 @@ function deleteCourse(id) {
   showToast(`Deleted "${deletedName}"`, 'warning');
 }
 
-function loadPreset(key) {
-  const preset = PRESETS[key];
-  if (!preset) return;
+function loadPreset(branch, semester) {
+  const branchPresets = PRESETS[branch];
+  const preset = branchPresets ? branchPresets[semester] : null;
+  
+  if (!preset || preset.length === 0) {
+    showToast(`No preset available for ${branch} - Semester ${semester} yet.`, 'warning');
+    return;
+  }
   
   courses = preset.map((c, i) => ({
     ...c,
-    id: `preset_${key}_${i}_${Date.now()}`
+    id: `preset_${branch}_${semester}_${i}_${Date.now()}`
   }));
   
   saveState();
   renderApp();
-  showToast(`Loaded ${key.toUpperCase()} preset successfully`, 'success');
+  showToast(`Loaded ${branch} Semester ${semester} preset successfully`, 'success');
 }
 
 function clearAllCourses() {

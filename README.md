@@ -13,7 +13,7 @@ A clean, fully client-side web app for students of **Nitte Meenakshi Institute o
 - **SEE eligibility tracking** — each course is flagged as Eligible, Warning, or Not Eligible based on the 40% (20/50) CIE rule, with an at-a-glance summary across all courses.
 - **SEE target predictor** — for every course, see the minimum raw SEE marks (out of 100) needed to secure each letter grade (P through O), and a full breakdown in a pop-up dialog.
 - **SGPA Simulator** — pick a predicted SEE grade for each course from a dropdown and instantly see your projected SGPA on a 10-point scale, with a visual progress bar.
-- **Syllabus presets** — one-click load of sample CSE 1st and 3rd semester course lists, or a quick demo semester from the empty state.
+- **Syllabus presets** — select your branch (AE, AIDS, AIML, CE, CSE, CSBS, EEE, ECE, VLSI, ISE, ME, RAI) and semester (1st–8th) from dropdowns and load the matching course list in one click, or use the quick demo from the empty state.
 - **Persistent state** — all courses and the simulator selections are saved to `localStorage`, so your data survives a page refresh.
 - **Light / dark theme toggle** — preference is remembered across sessions.
 - **PDF export** — export your CIE/SGPA report via the browser's native print-to-PDF dialog.
@@ -29,7 +29,7 @@ A clean, fully client-side web app for students of **Nitte Meenakshi Institute o
 | Course Type | Formula |
 |---|---|
 | **Non-Integrated** (Theory) | `LA-1 (10) + LA-2 (10) + MSE-1 scaled (15) + MSE-2 scaled (15)` |
-| **Integrated** (Theory + Lab) | `MSE-1 scaled (15) + MSE-2 scaled (15) + Lab (20)` |
+| **Integrated** (Theory + Lab) | `(Theory × 0.6) + (Practical × 0.4)` where Theory = LA (20) + MSE-1 scaled (15) + MSE-2 scaled (15) out of 50, and Practical = Lab assessment out of 50 |
 
 MSE-1 and MSE-2 are each conducted out of 50 marks and scaled to 15 by multiplying by `0.3`.
 
@@ -51,9 +51,9 @@ The total is then mapped to NMIT's 10-point letter-grade scale:
 | 80 – 89 | A+ (Excellent) | 9 |
 | 70 – 79 | A (Very Good) | 8 |
 | 60 – 69 | B+ (Good) | 7 |
-| 50 – 59 | B (Above Average) | 6 |
-| 45 – 49 | C (Average) | 5 |
-| 40 – 44 | P (Pass) | 4 |
+| 55 – 59 | B (Above Average) | 6 |
+| 50 – 54 | C (Average) | 5 |
+| 40 – 49 | P (Pass) | 4 |
 | < 40 | F (Fail) | 0 |
 
 SGPA is the credit-weighted average of grade points across all added courses.

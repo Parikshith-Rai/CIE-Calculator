@@ -682,7 +682,10 @@ body {
   color: var(--text-primary);
   outline: none;
   padding: 0.2rem 0;
-  width: 200px;
+  width: 300px;
+  max-width: 100%;
+  resize: none;
+  line-height: 1.2;
   transition: border-color var(--transition-fast);
 }
 

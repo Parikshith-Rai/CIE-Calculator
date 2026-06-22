@@ -129,10 +129,37 @@
       <section class="glass-card preset-card">
         <h2 class="card-title">Load Syllabus Preset</h2>
         <p class="card-desc">Load standard semester schedules to quickly calculate your grades without manual typing.</p>
-        <div class="presets-buttons">
-          <button id="btn-preset-1" class="btn-outline text-sm">CSE 1st Sem</button>
-          <button id="btn-preset-2" class="btn-outline text-sm">CSE 3rd Sem</button>
-          <button id="btn-preset-reset" class="btn-danger-outline text-sm">Clear All</button>
+        <div class="presets-buttons" style="display: flex; flex-direction: column; gap: 0.5rem;">
+          <select id="preset-branch" class="input-credits" style="width: 100%; padding: 0.5rem; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--card-border); border-radius: var(--radius-sm);">
+            <option value="" disabled selected>Select Branch</option>
+            <option value="AE">AE (Aeronautical)</option>
+            <option value="AIDS">AI & DS</option>
+            <option value="AIML">AI & ML</option>
+            <option value="CE">CE (Civil)</option>
+            <option value="CSE">CSE (Computer Science)</option>
+            <option value="CSBS">CSBS</option>
+            <option value="EEE">EEE (Electrical)</option>
+            <option value="ECE">ECE (Electronics)</option>
+            <option value="VLSI">VLSI Design</option>
+            <option value="ISE">ISE (Information Sci)</option>
+            <option value="ME">ME (Mechanical)</option>
+            <option value="RAI">RAI (Robotics & AI)</option>
+          </select>
+          <select id="preset-semester" class="input-credits" style="width: 100%; padding: 0.5rem; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--card-border); border-radius: var(--radius-sm);">
+            <option value="" disabled selected>Select Semester</option>
+            <option value="1">1st Semester</option>
+            <option value="2">2nd Semester</option>
+            <option value="3">3rd Semester</option>
+            <option value="4">4th Semester</option>
+            <option value="5">5th Semester</option>
+            <option value="6">6th Semester</option>
+            <option value="7">7th Semester</option>
+            <option value="8">8th Semester</option>
+          </select>
+          <div style="display: flex; gap: 0.5rem; margin-top: 0.5rem;">
+            <button id="btn-load-preset" class="btn-primary" style="flex-grow: 1;">Load</button>
+            <button id="btn-preset-reset" class="btn-danger-outline" style="flex-grow: 1;">Clear All</button>
+          </div>
         </div>
       </section>
     </aside>
