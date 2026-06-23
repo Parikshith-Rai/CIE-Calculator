@@ -36,24 +36,128 @@ const presetSemester = document.getElementById('preset-semester');
 const btnPresetReset = document.getElementById('btn-preset-reset');
 
 // --- PRESET DATABASES ---
+// IT Branches: AIDS, AIML, CSE, CSBS, ECE, EEE, ISE, VLSI
+//   Integrated subjects: Materials Chemistry, Problem Solving Through Programming
+// Non-IT Branches: AE, CE, ME, RAI
+//   Non-Integrated subjects: Mathematics with MATLAB, Introduction to C Programming, Wave Mechanics
+
+// Helper: Common 1st sem courses shared across IT branches
+function _itSem1(extraCourses) {
+  return [
+    { name: "Calculus and Linear Algebra", type: "non-integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+    { name: "Materials Chemistry", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+    { name: "Problem Solving Through Programming", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+    { name: "Engineering Graphics", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+    ...extraCourses
+  ];
+}
+
+function _nonItSem1(extraCourses) {
+  return [
+    { name: "Calculus and Linear Algebra", type: "non-integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+    { name: "Mathematics with MATLAB", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+    { name: "Introduction to C Programming", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+    { name: "Wave Mechanics", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+    { name: "Engineering Graphics", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+    ...extraCourses
+  ];
+}
+
 const PRESETS = {
+  // ── IT BRANCHES ──────────────────────────────────────────────────────────────
+
   "CSE": {
-    "1": [
-      { name: "Engineering Mathematics-I", type: "non-integrated", credits: 4, la1: 8, la2: 8, mse1: 40, mse2: 42, lab: 0, seePredicted: 80 },
-      { name: "Applied Physics", type: "integrated", credits: 4, la1: 8, la2: 8, mse1: 38, mse2: 40, lab: 45, seePredicted: 75 },
-      { name: "Basic Electrical Engineering", type: "non-integrated", credits: 3, la1: 9, la2: 7, mse1: 35, mse2: 38, lab: 0, seePredicted: 70 },
-      { name: "Elements of Civil Engineering", type: "non-integrated", credits: 3, la1: 7, la2: 8, mse1: 30, mse2: 32, lab: 0, seePredicted: 65 },
-      { name: "Engineering Graphics", type: "non-integrated", credits: 3, la1: 8, la2: 9, mse1: 42, mse2: 40, lab: 0, seePredicted: 85 }
-    ],
+    "1": _itSem1([
+      { name: "Foundations of Computer Science", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      { name: "Constitution of India & Professional Ethics", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
+    ]),
     "3": [
-      { name: "Discrete Mathematical Structures", type: "non-integrated", credits: 3, la1: 9, la2: 8, mse1: 45, mse2: 42, lab: 0, seePredicted: 88 },
-      { name: "Data Structures & Applications", type: "integrated", credits: 4, la1: 9, la2: 9, mse1: 40, mse2: 38, lab: 48, seePredicted: 82 },
-      { name: "Computer Organization & Arch.", type: "non-integrated", credits: 3, la1: 8, la2: 8, mse1: 35, mse2: 37, lab: 0, seePredicted: 72 },
-      { name: "Analog & Digital Electronics", type: "integrated", credits: 4, la1: 7, la2: 8, mse1: 32, mse2: 35, lab: 42, seePredicted: 68 },
-      { name: "Object Oriented Programming", type: "integrated", credits: 3, la1: 8, la2: 9, mse1: 38, mse2: 42, lab: 45, seePredicted: 80 }
+      { name: "Discrete Mathematical Structures", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      { name: "Data Structures & Applications", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      { name: "Computer Organization & Architecture", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      { name: "Analog & Digital Electronics", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      { name: "Object Oriented Programming with Java", type: "integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
     ]
+  },
+
+  "AIDS": {
+    "1": _itSem1([
+      { name: "Foundations of AI & Data Science", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      { name: "Constitution of India & Professional Ethics", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
+    ])
+  },
+
+  "AIML": {
+    "1": _itSem1([
+      { name: "Foundations of AI & Machine Learning", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      { name: "Constitution of India & Professional Ethics", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
+    ])
+  },
+
+  "CSBS": {
+    "1": _itSem1([
+      { name: "Principles of Business & Management", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      { name: "Constitution of India & Professional Ethics", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
+    ])
+  },
+
+  "ISE": {
+    "1": _itSem1([
+      { name: "Foundations of Information Science", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      { name: "Constitution of India & Professional Ethics", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
+    ])
+  },
+
+  "ECE": {
+    "1": _itSem1([
+      { name: "Foundations of Electronics & Communication", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      { name: "Constitution of India & Professional Ethics", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
+    ])
+  },
+
+  "VLSI": {
+    "1": _itSem1([
+      { name: "Foundations of VLSI Design", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      { name: "Constitution of India & Professional Ethics", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
+    ])
+  },
+
+  "EEE": {
+    "1": _itSem1([
+      { name: "Foundations of Electrical Engineering", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      { name: "Constitution of India & Professional Ethics", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
+    ])
+  },
+
+  // ── NON-IT BRANCHES ──────────────────────────────────────────────────────────
+
+  "AE": {
+    "1": _nonItSem1([
+      { name: "Introduction to Aeronautical Engineering", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      { name: "Constitution of India & Professional Ethics", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
+    ])
+  },
+
+  "CE": {
+    "1": _nonItSem1([
+      { name: "Introduction to Civil Engineering", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      { name: "Constitution of India & Professional Ethics", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
+    ])
+  },
+
+  "ME": {
+    "1": _nonItSem1([
+      { name: "Introduction to Mechanical Engineering", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      { name: "Constitution of India & Professional Ethics", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
+    ])
+  },
+
+  "RAI": {
+    "1": _nonItSem1([
+      { name: "Introduction to Robotics & AI", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      { name: "Constitution of India & Professional Ethics", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
+    ])
   }
-  // Other branches can be added here
 };
 
 // --- INITIALIZATION ---
