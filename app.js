@@ -42,13 +42,13 @@ const btnPresetReset = document.getElementById('btn-preset-reset');
 //   Non-Integrated subjects: Mathematics with MATLAB, Introduction to C Programming, Wave Mechanics
 
 // Helper: Common 1st sem courses shared across IT branches
-function _itSem1(extraCourses) {
+function _itSem1() {
   return [
     { name: "Calculus and Linear Algebra", type: "non-integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
     { name: "Materials Chemistry", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
     { name: "Problem Solving Through Programming", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
     { name: "Engineering Graphics", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-    ...extraCourses
+    { name: "English", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
   ];
 }
 
@@ -67,10 +67,7 @@ const PRESETS = {
   // ── IT BRANCHES ──────────────────────────────────────────────────────────────
 
   "CSE": {
-    "1": _itSem1([
-      { name: "Foundations of Computer Science", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-      { name: "Constitution of India & Professional Ethics", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
-    ]),
+    "1": _itSem1(),
     "3": [
       { name: "Discrete Mathematical Structures", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
       { name: "Data Structures & Applications", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
@@ -81,52 +78,31 @@ const PRESETS = {
   },
 
   "AIDS": {
-    "1": _itSem1([
-      { name: "Foundations of AI & Data Science", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-      { name: "Constitution of India & Professional Ethics", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
-    ])
+    "1": _itSem1()
   },
 
   "AIML": {
-    "1": _itSem1([
-      { name: "Foundations of AI & Machine Learning", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-      { name: "Constitution of India & Professional Ethics", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
-    ])
+    "1": _itSem1()
   },
 
   "CSBS": {
-    "1": _itSem1([
-      { name: "Principles of Business & Management", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-      { name: "Constitution of India & Professional Ethics", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
-    ])
+    "1": _itSem1()
   },
 
   "ISE": {
-    "1": _itSem1([
-      { name: "Foundations of Information Science", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-      { name: "Constitution of India & Professional Ethics", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
-    ])
+    "1": _itSem1()
   },
 
   "ECE": {
-    "1": _itSem1([
-      { name: "Foundations of Electronics & Communication", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-      { name: "Constitution of India & Professional Ethics", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
-    ])
+    "1": _itSem1()
   },
 
   "VLSI": {
-    "1": _itSem1([
-      { name: "Foundations of VLSI Design", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-      { name: "Constitution of India & Professional Ethics", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
-    ])
+    "1": _itSem1()
   },
 
   "EEE": {
-    "1": _itSem1([
-      { name: "Foundations of Electrical Engineering", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-      { name: "Constitution of India & Professional Ethics", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
-    ])
+    "1": _itSem1()
   },
 
   // ── NON-IT BRANCHES ──────────────────────────────────────────────────────────
@@ -841,12 +817,66 @@ function loadPreset(branch, semester) {
   showToast(`Loaded ${branch} Semester ${semester} preset successfully`, 'success');
 }
 
+let _deletedCoursesBackup = null;
+let _undoTimer = null;
+
 function clearAllCourses() {
   if (courses.length === 0) return;
+  
+  // Save backup for undo
+  _deletedCoursesBackup = JSON.parse(JSON.stringify(courses));
+  
   courses = [];
   saveState();
   renderApp();
-  showToast('Cleared all courses', 'danger');
+  showUndoClearToast();
+}
+
+function showUndoClearToast() {
+  // Remove any existing undo toast
+  const existing = document.querySelector('.toast-undo');
+  if (existing) existing.remove();
+  if (_undoTimer) clearTimeout(_undoTimer);
+  
+  const toast = document.createElement('div');
+  toast.className = 'toast toast-danger toast-undo';
+  
+  // Progress bar fill
+  toast.innerHTML = `
+    <span>🗑️</span>
+    <span style="flex: 1;">All courses cleared</span>
+    <button class="toast-undo-btn" id="btn-undo-clear">Undo</button>
+    <div class="toast-progress"></div>
+  `;
+  toastContainer.appendChild(toast);
+  
+  // Animate the progress bar shrinking over 5s
+  const progressBar = toast.querySelector('.toast-progress');
+  // Trigger reflow then animate
+  requestAnimationFrame(() => {
+    progressBar.style.transition = 'width 5s linear';
+    progressBar.style.width = '0%';
+  });
+  
+  // Undo click
+  toast.querySelector('#btn-undo-clear').addEventListener('click', () => {
+    if (_deletedCoursesBackup) {
+      courses = _deletedCoursesBackup;
+      _deletedCoursesBackup = null;
+      saveState();
+      renderApp();
+      showToast('Courses restored!', 'success');
+    }
+    clearTimeout(_undoTimer);
+    toast.remove();
+  });
+  
+  // Auto-dismiss after 5 seconds
+  _undoTimer = setTimeout(() => {
+    toast.style.animation = 'slideInLeft 0.35s cubic-bezier(0.16, 1, 0.3, 1) reverse';
+    setTimeout(() => toast.remove(), 350);
+    _deletedCoursesBackup = null;
+  }, 5000);
 }
 
 // --- CUSTOM MODALS & TOAST POPUPS ---

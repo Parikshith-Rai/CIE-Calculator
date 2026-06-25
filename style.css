@@ -1117,6 +1117,43 @@ body {
 .toast.toast-warning { border-left: 3px solid var(--color-warning); }
 .toast.toast-danger { border-left: 3px solid var(--color-danger); }
 
+/* Undo toast styles */
+.toast.toast-undo {
+  flex-wrap: wrap;
+  min-width: 300px;
+  position: relative;
+  padding-bottom: 1.5rem;
+  overflow: hidden;
+}
+
+.toast-undo-btn {
+  background: var(--color-danger);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.3rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+  white-space: nowrap;
+}
+
+.toast-undo-btn:hover {
+  opacity: 0.85;
+}
+
+.toast-progress {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 4px;
+  width: 100%;
+  background: var(--color-danger);
+  opacity: 0.6;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+}
+
 /* Responsive adjustments */
 @media (max-width: 1100px) {
   .app-container {
