@@ -4,7 +4,9 @@
 
 // --- STATE MANAGEMENT ---
 let courses = [];
+let savedSemesters = [];
 const DEFAULT_THEME = 'dark';
+const SAVED_SEMESTERS_KEY = 'nmit_saved_semesters';
 
 // --- ELEMENT SELECTORS ---
 const themeToggle = document.getElementById('theme-toggle');
@@ -30,26 +32,39 @@ const sgpaBreakdownList = document.getElementById('sgpa-breakdown');
 const btnExportPdf = document.getElementById('btn-export-pdf');
 
 // Presets selectors
-const btnPreset1 = document.getElementById('btn-preset-1');
-const btnPreset2 = document.getElementById('btn-preset-2');
 const btnPresetReset = document.getElementById('btn-preset-reset');
+
+// Saved Semesters Selectors
+const inputSemesterName = document.getElementById('input-semester-name');
+const btnSaveSemester = document.getElementById('btn-save-semester');
+const savedSemestersList = document.getElementById('saved-semesters-list');
+const btnCompareSemesters = document.getElementById('btn-compare-semesters');
+const comparisonModal = document.getElementById('comparison-modal');
+const btnCloseCompare = document.getElementById('btn-close-compare');
+const comparisonTbody = document.getElementById('comparison-tbody');
+
+const presetBranch = document.getElementById('preset-branch');
+const presetSemester = document.getElementById('preset-semester');
+const btnLoadPreset = document.getElementById('btn-load-preset');
 
 // --- PRESET DATABASES ---
 const PRESETS = {
-  cse1: [
-    { name: "Engineering Mathematics-I", type: "non-integrated", credits: 4, la1: 8, la2: 8, mse1: 40, mse2: 42, lab: 0, seePredicted: 80 },
-    { name: "Applied Physics", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 38, mse2: 40, lab: 18, seePredicted: 75 },
-    { name: "Basic Electrical Engineering", type: "non-integrated", credits: 3, la1: 9, la2: 7, mse1: 35, mse2: 38, lab: 0, seePredicted: 70 },
-    { name: "Elements of Civil Engineering", type: "non-integrated", credits: 3, la1: 7, la2: 8, mse1: 30, mse2: 32, lab: 0, seePredicted: 65 },
-    { name: "Engineering Graphics", type: "non-integrated", credits: 3, la1: 8, la2: 9, mse1: 42, mse2: 40, lab: 0, seePredicted: 85 }
-  ],
-  cse3: [
-    { name: "Discrete Mathematical Structures", type: "non-integrated", credits: 3, la1: 9, la2: 8, mse1: 45, mse2: 42, lab: 0, seePredicted: 88 },
-    { name: "Data Structures & Applications", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 40, mse2: 38, lab: 19, seePredicted: 82 },
-    { name: "Computer Organization & Arch.", type: "non-integrated", credits: 3, la1: 8, la2: 8, mse1: 35, mse2: 37, lab: 0, seePredicted: 72 },
-    { name: "Analog & Digital Electronics", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 32, mse2: 35, lab: 17, seePredicted: 68 },
-    { name: "Object Oriented Programming", type: "integrated", credits: 3, la1: 0, la2: 0, mse1: 38, mse2: 42, lab: 18, seePredicted: 80 }
-  ]
+  CSE: {
+    "1": [
+      { name: "Engineering Mathematics-I", type: "non-integrated", credits: 4, la1: 8, la2: 8, mse1: 40, mse2: 42, lab: 0, seePredicted: 80 },
+      { name: "Applied Physics", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 38, mse2: 40, lab: 18, seePredicted: 75 },
+      { name: "Basic Electrical Engineering", type: "non-integrated", credits: 3, la1: 9, la2: 7, mse1: 35, mse2: 38, lab: 0, seePredicted: 70 },
+      { name: "Elements of Civil Engineering", type: "non-integrated", credits: 3, la1: 7, la2: 8, mse1: 30, mse2: 32, lab: 0, seePredicted: 65 },
+      { name: "Engineering Graphics", type: "non-integrated", credits: 3, la1: 8, la2: 9, mse1: 42, mse2: 40, lab: 0, seePredicted: 85 }
+    ],
+    "3": [
+      { name: "Discrete Mathematical Structures", type: "non-integrated", credits: 3, la1: 9, la2: 8, mse1: 45, mse2: 42, lab: 0, seePredicted: 88 },
+      { name: "Data Structures & Applications", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 40, mse2: 38, lab: 19, seePredicted: 82 },
+      { name: "Computer Organization & Arch.", type: "non-integrated", credits: 3, la1: 8, la2: 8, mse1: 35, mse2: 37, lab: 0, seePredicted: 72 },
+      { name: "Analog & Digital Electronics", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 32, mse2: 35, lab: 17, seePredicted: 68 },
+      { name: "Object Oriented Programming", type: "integrated", credits: 3, la1: 0, la2: 0, mse1: 38, mse2: 42, lab: 18, seePredicted: 80 }
+    ]
+  }
 };
 
 // --- INITIALIZATION ---
@@ -68,12 +83,37 @@ document.addEventListener('DOMContentLoaded', () => {
   // Set up add buttons
   btnAddNonIntegrated.addEventListener('click', () => addCourse('non-integrated'));
   btnAddIntegrated.addEventListener('click', () => addCourse('integrated'));
-  btnEmptyDemo.addEventListener('click', () => loadPreset('cse1'));
+  btnEmptyDemo.addEventListener('click', () => loadPreset('CSE', '1'));
   
   // Presets controls
-  btnPreset1.addEventListener('click', () => loadPreset('cse1'));
-  btnPreset2.addEventListener('click', () => loadPreset('cse3'));
+  btnLoadPreset.addEventListener('click', () => {
+    const branch = presetBranch.value;
+    const sem = presetSemester.value;
+    if (!branch || !sem) {
+      showToast('Please select both Branch and Semester', 'warning');
+      return;
+    }
+    loadPreset(branch, sem);
+  });
+  
   btnPresetReset.addEventListener('click', clearAllCourses);
+  
+  // Saved Semesters controls
+  btnSaveSemester.addEventListener('click', () => {
+    const name = inputSemesterName.value.trim();
+    if (name) {
+      saveCurrentSemester(name);
+      inputSemesterName.value = '';
+    } else {
+      showToast('Please enter a name for the semester', 'warning');
+    }
+  });
+  
+  btnCompareSemesters.addEventListener('click', openComparisonModal);
+  btnCloseCompare.addEventListener('click', () => comparisonModal.close());
+  comparisonModal.addEventListener('click', (e) => {
+    if (e.target === comparisonModal) comparisonModal.close();
+  });
   
   // PDF Export
   btnExportPdf.addEventListener('click', () => exportPDF());
@@ -96,6 +136,7 @@ function initTheme() {
 // --- DATA PERSISTENCE ---
 function saveState() {
   localStorage.setItem('nmit_cie_courses', JSON.stringify(courses));
+  localStorage.setItem(SAVED_SEMESTERS_KEY, JSON.stringify(savedSemesters));
 }
 
 function loadState() {
@@ -105,6 +146,15 @@ function loadState() {
       courses = JSON.parse(saved);
     } catch (e) {
       courses = [];
+    }
+  }
+  
+  const savedSems = localStorage.getItem(SAVED_SEMESTERS_KEY);
+  if (savedSems) {
+    try {
+      savedSemesters = JSON.parse(savedSems);
+    } catch (e) {
+      savedSemesters = [];
     }
   }
 }
@@ -684,18 +734,26 @@ function deleteCourse(id) {
   showToast(`Deleted "${deletedName}"`, 'warning');
 }
 
-function loadPreset(key) {
-  const preset = PRESETS[key];
-  if (!preset) return;
+function loadPreset(branch, semester) {
+  const branchData = PRESETS[branch];
+  if (!branchData) {
+    showToast(`No preset available for ${branch} yet.`, 'warning');
+    return;
+  }
+  const preset = branchData[semester];
+  if (!preset) {
+    showToast(`No preset available for ${branch} - Semester ${semester} yet.`, 'warning');
+    return;
+  }
   
   courses = preset.map((c, i) => ({
     ...c,
-    id: `preset_${key}_${i}_${Date.now()}`
+    id: `preset_${branch}_${semester}_${i}_${Date.now()}`
   }));
   
   saveState();
   renderApp();
-  showToast(`Loaded ${key.toUpperCase()} preset successfully`, 'success');
+  showToast(`Loaded ${branch} Semester ${semester} preset successfully`, 'success');
 }
 
 function clearAllCourses() {
@@ -907,6 +965,173 @@ function exportPDF() {
   win.document.write(html);
   win.document.close();
   showToast('Report ready — save as PDF from the print dialog', 'success');
+}
+
+// --- SAVED SEMESTERS OPERATIONS ---
+
+function saveCurrentSemester(name) {
+  if (courses.length === 0) {
+    showToast('Add some courses before saving.', 'warning');
+    return;
+  }
+  
+  let totalGradePoints = 0;
+  let totalCredits = 0;
+  let totalCieVal = 0;
+  
+  courses.forEach(course => {
+    const cie = calculateCourseCIE(course);
+    totalCieVal += cie * course.credits;
+    if (cie >= 20) {
+      const predictedSEE = course.seePredicted !== undefined ? course.seePredicted : 80;
+      const finalScore = Math.min(100, Math.round(cie + (predictedSEE / 2)));
+      totalGradePoints += getGradePoints(finalScore).points * course.credits;
+    }
+    totalCredits += course.credits;
+  });
+  
+  const sgpa = totalCredits > 0 ? (totalGradePoints / totalCredits) : 0;
+  const avgCie = totalCredits > 0 ? (totalCieVal / totalCredits) : 0;
+  
+  const newSavedSem = {
+    id: 'sem_' + Date.now(),
+    name: name,
+    courses: JSON.parse(JSON.stringify(courses)),
+    sgpa: parseFloat(sgpa.toFixed(2)),
+    totalCredits: totalCredits,
+    avgCie: parseFloat(avgCie.toFixed(1))
+  };
+  
+  savedSemesters.push(newSavedSem);
+  saveState();
+  renderSavedSemesters();
+  showToast(`Semester "${name}" saved!`, 'success');
+}
+
+function loadSavedSemester(id) {
+  const sem = savedSemesters.find(s => s.id === id);
+  if (!sem) return;
+  
+  // Backup current for undo before overwriting
+  if (courses.length > 0) {
+    _deletedCoursesBackup = JSON.parse(JSON.stringify(courses));
+  }
+  
+  courses = JSON.parse(JSON.stringify(sem.courses));
+  saveState();
+  renderApp();
+  
+  // We use the undo logic if they overwrote existing courses
+  if (_deletedCoursesBackup) {
+    showUndoLoadToast(`Loaded "${sem.name}"`);
+  } else {
+    showToast(`Loaded "${sem.name}"`, 'success');
+  }
+}
+
+function deleteSavedSemester(id) {
+  savedSemesters = savedSemesters.filter(s => s.id !== id);
+  saveState();
+  renderSavedSemesters();
+  showToast('Saved semester deleted', 'danger');
+}
+
+function renderSavedSemesters() {
+  savedSemestersList.innerHTML = '';
+  
+  if (savedSemesters.length === 0) {
+    savedSemestersList.innerHTML = '<p style="text-align:center; color:var(--text-secondary); font-size:0.85rem; margin-top:0.5rem;">No saved semesters.</p>';
+    btnCompareSemesters.disabled = true;
+    return;
+  }
+  
+  btnCompareSemesters.disabled = savedSemesters.length < 2;
+  
+  savedSemesters.forEach(sem => {
+    const el = document.createElement('div');
+    el.className = 'saved-semester-item';
+    el.innerHTML = `
+      <div class="saved-semester-info">
+        <span class="saved-semester-name">${sem.name}</span>
+        <span class="saved-semester-stats">SGPA: ${sem.sgpa} | CIE: ${sem.avgCie}</span>
+      </div>
+      <div class="saved-semester-actions">
+        <button class="btn-icon" title="Load" onclick="loadSavedSemester('${sem.id}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+        <button class="btn-icon btn-delete" title="Delete" onclick="deleteSavedSemester('${sem.id}')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+        </button>
+      </div>
+    `;
+    savedSemestersList.appendChild(el);
+  });
+}
+
+function openComparisonModal() {
+  if (savedSemesters.length < 2) return;
+  
+  comparisonTbody.innerHTML = '';
+  
+  // Create a row for each saved semester
+  savedSemesters.forEach(sem => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td style="font-weight: 700;">${sem.name}</td>
+      <td>${sem.totalCredits}</td>
+      <td>${sem.avgCie} / 50</td>
+      <td style="font-weight: 700; color: var(--accent-primary);">${sem.sgpa}</td>
+    `;
+    comparisonTbody.appendChild(tr);
+  });
+  
+  comparisonModal.showModal();
+}
+
+function showUndoLoadToast(msg) {
+  // Same logic as showUndoClearToast, but different text
+  const existing = document.querySelector('.toast-undo');
+  if (existing) existing.remove();
+  if (_undoTimer) clearTimeout(_undoTimer);
+  
+  const toast = document.createElement('div');
+  toast.className = 'toast toast-warning toast-undo';
+  toast.innerHTML = `
+    <span>🔄</span>
+    <span style="flex: 1;">${msg}</span>
+    <button class="toast-undo-btn" id="btn-undo-load">Undo</button>
+    <div class="toast-progress"></div>
+  `;
+  toastContainer.appendChild(toast);
+  
+  const progressBar = toast.querySelector('.toast-progress');
+  requestAnimationFrame(() => {
+    progressBar.style.transition = 'width 5s linear';
+    progressBar.style.width = '0%';
+  });
+  
+  toast.querySelector('#btn-undo-load').addEventListener('click', () => {
+    if (_deletedCoursesBackup) {
+      courses = _deletedCoursesBackup;
+      _deletedCoursesBackup = null;
+      saveState();
+      renderApp();
+      showToast('Courses restored!', 'success');
+    }
+    clearTimeout(_undoTimer);
+    toast.remove();
+  });
+  
+  _undoTimer = setTimeout(() => {
+    toast.style.animation = 'slideInLeft 0.35s cubic-bezier(0.16, 1, 0.3, 1) reverse';
+    setTimeout(() => toast.remove(), 350);
+    _deletedCoursesBackup = null;
+  }, 5000);
 }
 
 // --- CUSTOM MODALS & TOAST POPUPS ---
