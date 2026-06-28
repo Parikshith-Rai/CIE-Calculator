@@ -30,108 +30,26 @@ const sgpaBreakdownList = document.getElementById('sgpa-breakdown');
 const btnExportPdf = document.getElementById('btn-export-pdf');
 
 // Presets selectors
-const presetBranch = document.getElementById('preset-branch');
-const presetSemester = document.getElementById('preset-semester');
-const btnLoadPreset = document.getElementById('btn-load-preset');
+const btnPreset1 = document.getElementById('btn-preset-1');
+const btnPreset2 = document.getElementById('btn-preset-2');
 const btnPresetReset = document.getElementById('btn-preset-reset');
 
 // --- PRESET DATABASES ---
-// Semester 2 integrated/non-integrated determined by L-T-P from official NMIT timetable (AY 2025-26)
-// Integrated = has lab hours (P > 0): PHY102(3-0-2), ECE101(2-0-2), CSE102(2-0-2),
-//              CHY103/104(3-0-2), MEC101(2-0-2), CHY102(3-0-2)
-// Non-Integrated = no lab hours: MAT106(3-1-0), EEE102(3-0-0), HSS102(2-0-0), etc.
-
-// ── SEM 1 HELPERS ────────────────────────────────────────────────────────────
-function _itSem1() {
-  return [
-    { name: "Calculus and Linear Algebra", type: "non-integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-    { name: "Materials Chemistry", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-    { name: "Problem Solving Through Programming", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-    { name: "Engineering Graphics", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-    { name: "English", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
-  ];
-}
-
-function _nonItSem1() {
-  return [
-    { name: "Calculus and Linear Algebra", type: "non-integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-    { name: "Mathematics with MATLAB", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-    { name: "Introduction to C Programming", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-    { name: "Wave Mechanics", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-    { name: "Engineering Graphics", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
-  ];
-}
-
-// ── SEM 2 HELPERS ────────────────────────────────────────────────────────────
-// CSE / CSBS / ISE / AIDS / AIML / RAI — identical Sem 2 subjects
-function _itSem2() {
-  return [
-    { name: "Linear Algebra and Transform Techniques", type: "non-integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },   // MAT106 3-1-0
-    { name: "Quantum Computing and Modern Physics",    type: "integrated",     credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },   // PHY102 3-0-2
-    { name: "Applied Digital Logic Design",            type: "integrated",     credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },   // ECE101 2-0-2
-    { name: "Elements of Electrical Engineering",     type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },   // EEE102 3-0-0
-    { name: "Introduction to Python Programming",     type: "integrated",     credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },   // CSE102 2-0-2
-    { name: "Universal Human Values & Professional Ethics", type: "non-integrated", credits: 2, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // HSS102 2-0-0
-    { name: "Mathematics with MATLAB",                type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 },    // MAT107 EXT=0
-    { name: "Constitution of India & Global Citizenship", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 }, // HSS101 EXT=0
-    { name: "Pathways to Success",                    type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 }     // HSS133 no EXT
-  ];
-}
-
-// EEE / VLSI / ECE — use MAT105, CHY104, MEC112 instead
-function _eeeGroupSem2() {
-  return [
-    { name: "Differential Equations and Laplace Transforms", type: "non-integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // MAT105 3-1-0
-    { name: "Materials Chemistry for Devices and E-Waste",   type: "integrated",     credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // CHY104 3-0-2
-    { name: "Elements of Mechanical Engineering",            type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // MEC112 3-0-0
-    { name: "Applied Digital Logic Design",                  type: "integrated",     credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // ECE101 2-0-2
-    { name: "Environmental Science & Sustainability",        type: "non-integrated", credits: 2, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // CIV104 2-0-0
-    { name: "Universal Human Values & Professional Ethics",  type: "non-integrated", credits: 2, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // HSS102 2-0-0
-    { name: "Biology for Engineers",                         type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // BTY111 1-0-0
-    { name: "IT Skills",                                     type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 },  // CSE121 no EXT
-    { name: "Pathways to Success",                           type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 }   // HSS133 no EXT
-  ];
-}
-
-// CE / ME / AE — MAT104, CHY103 (integrated), MEC101-CAED (integrated)
-function _civilMechAeroSem2(chemName) {
-  return [
-    { name: "Matrix Algebra and Differential Equations", type: "non-integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // MAT104 3-1-0
-    { name: chemName,                                    type: "integrated",     credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // CHY103/102 3-0-2
-    { name: "Computer Aided Engineering Graphics",       type: "integrated",     credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // MEC101 2-0-2
-    { name: "Engineering Mechanics",                     type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // CIV111 3-0-0
-    { name: "Environmental Science & Sustainability",    type: "non-integrated", credits: 2, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // CIV104 2-0-0
-    { name: "Universal Human Values & Professional Ethics", type: "non-integrated", credits: 2, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // HSS102 2-0-0
-    { name: "Biology for Engineers",                     type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // BTY111 1-0-0
-    { name: "IT Skills",                                 type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // CSE121 0-0-2
-    { name: "Constitution of India & Global Citizenship", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 }, // HSS101 EXT=0
-    { name: "Pathways to Success",                       type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 }  // HSS133 no EXT
-  ];
-}
-
 const PRESETS = {
-  "CSE": {
-    "1": _itSem1(),
-    "2": _itSem2(),
-    "3": [
-      { name: "Discrete Mathematical Structures",    type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-      { name: "Data Structures & Applications",      type: "integrated",     credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-      { name: "Computer Organization & Architecture",type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-      { name: "Analog & Digital Electronics",        type: "integrated",     credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-      { name: "Object Oriented Programming with Java", type: "integrated",   credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
-    ]
-  },
-  "CSBS": { "1": _itSem1(), "2": _itSem2() },
-  "ISE":  { "1": _itSem1(), "2": _itSem2() },
-  "AIDS": { "1": _itSem1(), "2": _itSem2() },
-  "AIML": { "1": _itSem1(), "2": _itSem2() },
-  "RAI":  { "1": _nonItSem1(), "2": _itSem2() },
-  "EEE":  { "1": _itSem1(), "2": _eeeGroupSem2() },
-  "VLSI": { "1": _itSem1(), "2": _eeeGroupSem2() },
-  "ECE":  { "1": _itSem1(), "2": _eeeGroupSem2() },
-  "CE":   { "1": _nonItSem1(), "2": _civilMechAeroSem2("Chemistry for Civil Engineering") },
-  "ME":   { "1": _nonItSem1(), "2": _civilMechAeroSem2("Materials Chemistry and Energy Applications") },
-  "AE":   { "1": _nonItSem1(), "2": _civilMechAeroSem2("Materials Chemistry and Energy Applications") }
+  cse1: [
+    { name: "Engineering Mathematics-I", type: "non-integrated", credits: 4, la1: 8, la2: 8, mse1: 40, mse2: 42, lab: 0, seePredicted: 80 },
+    { name: "Applied Physics", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 38, mse2: 40, lab: 18, seePredicted: 75 },
+    { name: "Basic Electrical Engineering", type: "non-integrated", credits: 3, la1: 9, la2: 7, mse1: 35, mse2: 38, lab: 0, seePredicted: 70 },
+    { name: "Elements of Civil Engineering", type: "non-integrated", credits: 3, la1: 7, la2: 8, mse1: 30, mse2: 32, lab: 0, seePredicted: 65 },
+    { name: "Engineering Graphics", type: "non-integrated", credits: 3, la1: 8, la2: 9, mse1: 42, mse2: 40, lab: 0, seePredicted: 85 }
+  ],
+  cse3: [
+    { name: "Discrete Mathematical Structures", type: "non-integrated", credits: 3, la1: 9, la2: 8, mse1: 45, mse2: 42, lab: 0, seePredicted: 88 },
+    { name: "Data Structures & Applications", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 40, mse2: 38, lab: 19, seePredicted: 82 },
+    { name: "Computer Organization & Arch.", type: "non-integrated", credits: 3, la1: 8, la2: 8, mse1: 35, mse2: 37, lab: 0, seePredicted: 72 },
+    { name: "Analog & Digital Electronics", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 32, mse2: 35, lab: 17, seePredicted: 68 },
+    { name: "Object Oriented Programming", type: "integrated", credits: 3, la1: 0, la2: 0, mse1: 38, mse2: 42, lab: 18, seePredicted: 80 }
+  ]
 };
 
 // --- INITIALIZATION ---
@@ -150,29 +68,15 @@ document.addEventListener('DOMContentLoaded', () => {
   // Set up add buttons
   btnAddNonIntegrated.addEventListener('click', () => addCourse('non-integrated'));
   btnAddIntegrated.addEventListener('click', () => addCourse('integrated'));
-  btnEmptyDemo.addEventListener('click', () => {
-    // Load CSE Sem 2 as the demo
-    presetBranch.value = 'CSE';
-    presetSemester.value = '2';
-    loadPreset('CSE', '2');
-  });
+  btnEmptyDemo.addEventListener('click', () => loadPreset('cse1'));
   
   // Presets controls
-  btnLoadPreset.addEventListener('click', () => {
-    const branch = presetBranch.value;
-    const sem = presetSemester.value;
-    if (!branch || !sem) {
-      showToast('Please select both a branch and semester', 'warning');
-      return;
-    }
-    loadPreset(branch, sem);
-  });
+  btnPreset1.addEventListener('click', () => loadPreset('cse1'));
+  btnPreset2.addEventListener('click', () => loadPreset('cse3'));
   btnPresetReset.addEventListener('click', clearAllCourses);
   
   // PDF Export
-  btnExportPdf.addEventListener('click', () => {
-    window.print();
-  });
+  btnExportPdf.addEventListener('click', () => exportPDF());
 });
 
 // --- THEME MANAGEMENT ---
@@ -209,14 +113,15 @@ function loadState() {
 function calculateCourseCIE(course) {
   const mse1Scaled = (course.mse1 || 0) * 0.3;
   const mse2Scaled = (course.mse2 || 0) * 0.3;
+  const la1Val = course.la1 || 0;
+  const la2Val = course.la2 || 0;
   
   if (course.type === 'non-integrated') {
-    const la1Val = course.la1 || 0;
-    const la2Val = course.la2 || 0;
     return parseFloat((la1Val + la2Val + mse1Scaled + mse2Scaled).toFixed(1));
   } else {
+    const theoryPart = la1Val + la2Val + mse1Scaled + mse2Scaled;
     const labVal = course.lab || 0;
-    return parseFloat((mse1Scaled + mse2Scaled + labVal).toFixed(1));
+    return parseFloat(((theoryPart * 0.6) + (labVal * 0.4)).toFixed(1));
   }
 }
 
@@ -779,26 +684,18 @@ function deleteCourse(id) {
   showToast(`Deleted "${deletedName}"`, 'warning');
 }
 
-function loadPreset(branch, sem) {
-  const branchData = PRESETS[branch];
-  if (!branchData) {
-    showToast(`No preset found for ${branch}`, 'warning');
-    return;
-  }
-  const preset = branchData[sem];
-  if (!preset) {
-    showToast(`No preset for ${branch} Semester ${sem} yet`, 'warning');
-    return;
-  }
+function loadPreset(key) {
+  const preset = PRESETS[key];
+  if (!preset) return;
   
   courses = preset.map((c, i) => ({
     ...c,
-    id: `preset_${branch}_${sem}_${i}_${Date.now()}`
+    id: `preset_${key}_${i}_${Date.now()}`
   }));
   
   saveState();
   renderApp();
-  showToast(`Loaded ${branch} Semester ${sem} preset`, 'success');
+  showToast(`Loaded ${key.toUpperCase()} preset successfully`, 'success');
 }
 
 function clearAllCourses() {
@@ -807,6 +704,209 @@ function clearAllCourses() {
   saveState();
   renderApp();
   showToast('Cleared all courses', 'danger');
+}
+
+// --- PDF EXPORT ---
+function exportPDF() {
+  if (courses.length === 0) {
+    showToast('Add some courses before exporting', 'warning');
+    return;
+  }
+
+  // ── Gather all data ──────────────────────────────────────────────────────
+  let totalGradePoints = 0, totalCredits = 0, ineligibleCount = 0;
+  const rows = courses.map(course => {
+    const cie        = calculateCourseCIE(course);
+    const eligible   = cie >= 20;
+    const predictSEE = course.seePredicted ?? 80;
+    const finalScore = eligible ? Math.min(100, Math.round(cie + predictSEE / 2)) : 0;
+    const gradeObj   = eligible ? getGradePoints(finalScore) : { grade: 'F', points: 0 };
+    const credits    = parseInt(course.credits) || 0;
+
+    if (!eligible) ineligibleCount++;
+    totalGradePoints += gradeObj.points * credits;
+    totalCredits     += credits;
+
+    return { course, cie, eligible, predictSEE, finalScore, gradeObj, credits };
+  });
+
+  const sgpa    = totalCredits > 0 ? (totalGradePoints / totalCredits).toFixed(2) : '0.00';
+  const avgCie  = (rows.reduce((s, r) => s + r.cie, 0) / rows.length).toFixed(1);
+  const now     = new Date();
+  const dateStr = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
+
+  // ── Grade colour map ─────────────────────────────────────────────────────
+  const gradeColor = {
+    O:'#16a34a', 'A+':'#2563eb', A:'#0891b2',
+    'B+':'#7c3aed', B:'#9333ea', C:'#d97706', P:'#ea580c', F:'#dc2626'
+  };
+
+  // ── Build course rows HTML ───────────────────────────────────────────────
+  const rowsHTML = rows.map((r, idx) => {
+    const isIntg = r.course.type === 'integrated';
+    const gc     = gradeColor[r.gradeObj.grade] || '#6b7280';
+
+    // marks detail string
+    let marksDetail = '';
+    if (isIntg) {
+      marksDetail = `MSE1: ${r.course.mse1||0}/50 &nbsp;|&nbsp; MSE2: ${r.course.mse2||0}/50 &nbsp;|&nbsp; Lab: ${r.course.lab||0}/50`;
+    } else {
+      marksDetail = `LA1: ${r.course.la1||0}/10 &nbsp;|&nbsp; LA2: ${r.course.la2||0}/10 &nbsp;|&nbsp; MSE1: ${r.course.mse1||0}/50 &nbsp;|&nbsp; MSE2: ${r.course.mse2||0}/50`;
+    }
+
+    return `
+      <tr style="background:${idx%2===0?'#f9fafb':'#ffffff'}">
+        <td style="padding:10px 12px;font-weight:500;color:#111827">${idx+1}. ${r.course.name||'Untitled'}</td>
+        <td style="padding:10px 12px;text-align:center">
+          <span style="font-size:11px;padding:2px 8px;border-radius:20px;background:${isIntg?'#ede9fe':'#e0f2fe'};color:${isIntg?'#6d28d9':'#0369a1'}">
+            ${isIntg ? 'Integrated' : 'Theory'}
+          </span>
+        </td>
+        <td style="padding:10px 12px;text-align:center;font-size:12px;color:#6b7280">${marksDetail}</td>
+        <td style="padding:10px 12px;text-align:center;font-weight:700;color:${r.eligible?'#111827':'#dc2626'}">${r.cie}/50</td>
+        <td style="padding:10px 12px;text-align:center">
+          <span style="padding:2px 8px;border-radius:20px;font-size:11px;background:${r.eligible?'#dcfce7':'#fee2e2'};color:${r.eligible?'#15803d':'#dc2626'}">
+            ${r.eligible ? 'Eligible' : 'Ineligible'}
+          </span>
+        </td>
+        <td style="padding:10px 12px;text-align:center;color:#6b7280">${r.credits}</td>
+        <td style="padding:10px 12px;text-align:center;color:#6b7280">${r.predictSEE}/100</td>
+        <td style="padding:10px 12px;text-align:center;font-weight:700;color:${gc}">
+          ${r.gradeObj.grade} (${r.gradeObj.points})
+        </td>
+      </tr>`;
+  }).join('');
+
+  // ── SGPA colour ──────────────────────────────────────────────────────────
+  const sgpaNum = parseFloat(sgpa);
+  const sgpaClr = sgpaNum >= 8.5 ? '#16a34a' : sgpaNum >= 7 ? '#2563eb' : sgpaNum >= 5.5 ? '#d97706' : '#dc2626';
+
+  // ── Full HTML document ───────────────────────────────────────────────────
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NMIT CIE Report — ${dateStr}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f3f4f6; color: #111827; }
+    .page { max-width: 900px; margin: 0 auto; background: #fff; padding: 40px 36px 48px; }
+
+    /* Header */
+    .header { display: flex; justify-content: space-between; align-items: flex-start; padding-bottom: 20px; border-bottom: 3px solid #6d28d9; margin-bottom: 28px; }
+    .header-left h1 { font-size: 24px; font-weight: 800; color: #6d28d9; letter-spacing: -0.5px; }
+    .header-left p  { font-size: 13px; color: #6b7280; margin-top: 3px; }
+    .header-right   { text-align: right; font-size: 12px; color: #6b7280; }
+    .header-right strong { display: block; font-size: 13px; color: #111827; }
+
+    /* Summary cards */
+    .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+    .stat-box { border-radius: 10px; padding: 14px 16px; }
+    .stat-box .val { font-size: 28px; font-weight: 800; line-height: 1; }
+    .stat-box .lbl { font-size: 11px; color: #6b7280; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    /* Table */
+    .section-title { font-size: 14px; font-weight: 700; color: #374151; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 28px; }
+    thead tr { background: #6d28d9; color: #fff; }
+    thead th { padding: 10px 12px; text-align: center; font-weight: 600; font-size: 12px; letter-spacing: 0.3px; }
+    thead th:first-child { text-align: left; }
+    tbody tr:last-child td { border-bottom: none; }
+    td { border-bottom: 1px solid #e5e7eb; }
+
+    /* Grade key */
+    .grade-key { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+    .grade-pill { font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+
+    /* Footer */
+    .footer { border-top: 1px solid #e5e7eb; padding-top: 14px; display: flex; justify-content: space-between; font-size: 11px; color: #9ca3af; }
+
+    @media print {
+      body { background: #fff; }
+      .page { padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-left">
+      <h1>NMIT CIE Hub</h1>
+      <p>Nitte Meenakshi Institute of Technology — CIE &amp; SGPA Report</p>
+    </div>
+    <div class="header-right">
+      <strong>${dateStr}</strong>
+      Generated by NMIT CIE Hub
+    </div>
+  </div>
+
+  <!-- Summary -->
+  <div class="summary">
+    <div class="stat-box" style="background:#f5f3ff">
+      <div class="val" style="color:${sgpaClr}">${sgpa}</div>
+      <div class="lbl">Projected SGPA</div>
+    </div>
+    <div class="stat-box" style="background:#f0fdf4">
+      <div class="val" style="color:#16a34a">${avgCie}</div>
+      <div class="lbl">Avg CIE Marks</div>
+    </div>
+    <div class="stat-box" style="background:#eff6ff">
+      <div class="val" style="color:#2563eb">${totalCredits}</div>
+      <div class="lbl">Total Credits</div>
+    </div>
+    <div class="stat-box" style="background:${ineligibleCount>0?'#fef2f2':'#f0fdf4'}">
+      <div class="val" style="color:${ineligibleCount>0?'#dc2626':'#16a34a'}">${ineligibleCount > 0 ? ineligibleCount + ' ⚠' : '✓ All'}</div>
+      <div class="lbl">${ineligibleCount>0?'Ineligible Courses':'SEE Eligible'}</div>
+    </div>
+  </div>
+
+  <!-- Course Table -->
+  <div class="section-title">Course-wise Breakdown</div>
+  <table>
+    <thead>
+      <tr>
+        <th style="text-align:left;width:22%">Course</th>
+        <th>Type</th>
+        <th>Marks Entered</th>
+        <th>CIE/50</th>
+        <th>SEE Status</th>
+        <th>Credits</th>
+        <th>SEE (pred.)</th>
+        <th>Grade (GP)</th>
+      </tr>
+    </thead>
+    <tbody>${rowsHTML}</tbody>
+  </table>
+
+  <!-- Grade Key -->
+  <div class="section-title">Grade Scale Reference</div>
+  <div class="grade-key">
+    ${Object.entries(gradeColor).map(([g,c])=>`<span class="grade-pill" style="background:${c}22;color:${c}">${g}</span>`).join('')}
+    <span style="font-size:11px;color:#6b7280;align-self:center;margin-left:4px">GP = Grade Points on 10-point scale &nbsp;|&nbsp; Min CIE = 20/50 for SEE eligibility &nbsp;|&nbsp; Min SEE = 40/100 to pass</span>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    <span>NMIT CIE Hub &mdash; nmit.ac.in</span>
+    <span>This report is auto-generated and for reference only.</span>
+  </div>
+
+</div>
+<script>window.onload = () => window.print();<\/script>
+</body>
+</html>`;
+
+  // ── Open in new tab and trigger print ────────────────────────────────────
+  const win = window.open('', '_blank');
+  if (!win) {
+    showToast('Pop-up blocked — please allow pop-ups and try again', 'warning');
+    return;
+  }
+  win.document.write(html);
+  win.document.close();
+  showToast('Report ready — save as PDF from the print dialog', 'success');
 }
 
 // --- CUSTOM MODALS & TOAST POPUPS ---
