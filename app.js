@@ -43,6 +43,16 @@ const comparisonModal = document.getElementById('comparison-modal');
 const btnCloseCompare = document.getElementById('btn-close-compare');
 const comparisonTbody = document.getElementById('comparison-tbody');
 
+// Add Past Semester Selectors
+const btnAddPastSemester = document.getElementById('btn-add-past-semester');
+const pastSemesterModal = document.getElementById('past-semester-modal');
+const btnClosePastModal = document.getElementById('btn-close-past-modal');
+const btnSubmitPastSemester = document.getElementById('btn-submit-past-semester');
+const pastSemNameInput = document.getElementById('past-sem-name');
+const pastSemSgpaInput = document.getElementById('past-sem-sgpa');
+const pastSemCreditsInput = document.getElementById('past-sem-credits');
+const pastSemCieInput = document.getElementById('past-sem-cie');
+
 const presetBranch = document.getElementById('preset-branch');
 const presetSemester = document.getElementById('preset-semester');
 const btnLoadPreset = document.getElementById('btn-load-preset');
@@ -113,6 +123,48 @@ document.addEventListener('DOMContentLoaded', () => {
   btnCloseCompare.addEventListener('click', () => comparisonModal.close());
   comparisonModal.addEventListener('click', (e) => {
     if (e.target === comparisonModal) comparisonModal.close();
+  });
+  
+  // Past Semester Modal controls
+  btnAddPastSemester.addEventListener('click', () => pastSemesterModal.showModal());
+  btnClosePastModal.addEventListener('click', () => pastSemesterModal.close());
+  pastSemesterModal.addEventListener('click', (e) => {
+    if (e.target === pastSemesterModal) pastSemesterModal.close();
+  });
+  
+  btnSubmitPastSemester.addEventListener('click', () => {
+    const name = pastSemNameInput.value.trim();
+    const sgpa = parseFloat(pastSemSgpaInput.value);
+    const credits = parseInt(pastSemCreditsInput.value);
+    const avgCie = parseFloat(pastSemCieInput.value) || 0;
+    
+    if (!name || isNaN(sgpa) || isNaN(credits)) {
+      showToast('Please enter Name, SGPA, and Total Credits', 'warning');
+      return;
+    }
+    
+    const newSavedSem = {
+      id: 'sem_' + Date.now(),
+      name: name,
+      courses: [], // Empty for manual entries
+      sgpa: sgpa,
+      totalCredits: credits,
+      avgCie: avgCie,
+      isPast: true
+    };
+    
+    savedSemesters.push(newSavedSem);
+    saveState();
+    renderSavedSemesters();
+    
+    // clear inputs
+    pastSemNameInput.value = '';
+    pastSemSgpaInput.value = '';
+    pastSemCreditsInput.value = '';
+    pastSemCieInput.value = '';
+    
+    pastSemesterModal.close();
+    showToast(`Past Semester "${name}" added!`, 'success');
   });
   
   // PDF Export
@@ -1056,11 +1108,13 @@ function renderSavedSemesters() {
         <span class="saved-semester-stats">SGPA: ${sem.sgpa} | CIE: ${sem.avgCie}</span>
       </div>
       <div class="saved-semester-actions">
+        ${sem.isPast || sem.courses.length === 0 ? '' : `
         <button class="btn-icon" title="Load" onclick="loadSavedSemester('${sem.id}')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
             <polyline points="9 18 15 12 9 6"></polyline>
           </svg>
         </button>
+        `}
         <button class="btn-icon btn-delete" title="Delete" onclick="deleteSavedSemester('${sem.id}')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
             <polyline points="3 6 5 6 21 6"></polyline>
