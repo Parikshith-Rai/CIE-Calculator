@@ -573,9 +573,9 @@ function renderSidebar() {
     totalCie += cie;
     totalCredits += parseInt(c.credits) || 0;
     
-    if (cie < 20) {
+    if (cie < 18) {
       ineligibleCount++;
-    } else if (cie < 22) {
+    } else if (cie < 20) {
       warningCount++;
     }
   });
