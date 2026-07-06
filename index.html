@@ -162,6 +162,37 @@
           </div>
         </div>
       </section>
+
+      <!-- Saved Semesters Card -->
+      <section class="glass-card saved-semesters-card">
+        <div class="card-header-with-action">
+          <h2 class="card-title">Saved Semesters</h2>
+        </div>
+        <p class="card-desc">Save your results and compare progress across semesters.</p>
+        
+        <div class="save-current-action">
+          <input type="text" id="input-semester-name" class="input-credits" placeholder="Name (e.g. 1st Sem)" style="width: 100%; text-align: left; padding: 0.5rem; margin-bottom: 0.5rem;">
+          <div style="display: flex; gap: 0.5rem;">
+            <button id="btn-save-semester" class="btn-primary" style="flex-grow: 1; padding: 0.5rem;">Save Current</button>
+            <button id="btn-add-past-semester" class="btn-secondary" style="flex-grow: 1; padding: 0.5rem;" title="Manually add a past semester's stats">+ Add Past</button>
+          </div>
+        </div>
+
+        <div id="saved-semesters-list" class="saved-semesters-list" style="margin-top: 1rem; max-height: 200px; overflow-y: auto;">
+          <!-- Dynamically populated saved semesters -->
+        </div>
+
+        <div class="sidebar-actions" style="margin-top: 1rem;">
+          <button id="btn-compare-semesters" class="btn-secondary w-full" disabled>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            Compare Semesters
+          </button>
+        </div>
+      </section>
     </aside>
 
     <!-- Right Column: Course List and Marks Input -->
@@ -278,8 +309,85 @@
     </div>
   </dialog>
 
+  <!-- Comparison Modal -->
+  <dialog id="comparison-modal" class="modal-dialog comparison-dialog">
+    <div class="modal-content glass-card">
+      <div class="modal-header">
+        <h2>Semester Progress Comparison</h2>
+        <button id="btn-close-compare" class="btn-icon" aria-label="Close modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="table-wrapper">
+          <table class="grades-table comparison-table">
+            <thead>
+              <tr>
+                <th>Semester Name</th>
+                <th>Total Credits</th>
+                <th>Avg CIE Marks</th>
+                <th>SGPA (Simulated)</th>
+              </tr>
+            </thead>
+            <tbody id="comparison-tbody">
+              <!-- Dynamically populated rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Add Past Semester Modal -->
+  <dialog id="past-semester-modal" class="modal-dialog">
+    <div class="modal-content glass-card" style="max-width: 400px;">
+      <div class="modal-header">
+        <h2>Add Past Semester</h2>
+        <button id="btn-close-past-modal" class="btn-icon" aria-label="Close modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
+        <div>
+          <label class="stat-label">Semester Name</label>
+          <input type="text" id="past-sem-name" class="input-credits" placeholder="e.g. 1st Semester" style="width: 100%; text-align: left; padding: 0.5rem; margin-top: 0.25rem;">
+        </div>
+        <div>
+          <label class="stat-label">Final SGPA</label>
+          <input type="number" id="past-sem-sgpa" class="input-credits" placeholder="e.g. 8.5" step="0.01" min="0" max="10" style="width: 100%; text-align: left; padding: 0.5rem; margin-top: 0.25rem;">
+        </div>
+        <div>
+          <label class="stat-label">Total Credits</label>
+          <input type="number" id="past-sem-credits" class="input-credits" placeholder="e.g. 20" step="1" min="1" max="50" style="width: 100%; text-align: left; padding: 0.5rem; margin-top: 0.25rem;">
+        </div>
+        <div>
+          <label class="stat-label">Avg CIE Marks (Optional)</label>
+          <input type="number" id="past-sem-cie" class="input-credits" placeholder="e.g. 40" step="0.1" min="0" max="50" style="width: 100%; text-align: left; padding: 0.5rem; margin-top: 0.25rem;">
+        </div>
+        <button id="btn-submit-past-semester" class="btn-primary w-full" style="margin-top: 0.5rem;">Save Past Semester</button>
+      </div>
+    </div>
+  </dialog>
+
   <!-- Toast Notification System -->
   <div id="toast-container" class="toast-container"></div>
+
+  <!-- Total Users Badge -->
+  <div id="user-count-badge" class="user-count-badge" title="Total users who have used this site">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+      <circle cx="9" cy="7" r="4"></circle>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+    </svg>
+    <span id="user-count-value">--</span>
+  </div>
 
   <!-- JavaScript Code -->
   <script src="app.js"></script>

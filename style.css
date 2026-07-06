@@ -199,67 +199,39 @@ body {
   gap: 1.75rem;
 }
 
-/* Radial Progress Tracker */
-.radial-progress-container {
-  position: relative;
-  width: 150px;
-  height: 150px;
-  margin: 1rem auto 1.5rem;
-}
-
-.radial-progress {
-  transform: rotate(-90deg);
-  width: 100%;
-  height: 100%;
-}
-
-.radial-progress circle {
-  fill: none;
-  stroke-width: 10;
-}
-
-.radial-progress .circle-bg {
-  stroke: var(--card-border);
-}
-
-.radial-progress .circle-progress {
-  stroke: url(#radial-grad);
-  stroke-dasharray: 314.15;
-  stroke-dashoffset: 314.15;
-  stroke-linecap: round;
-  transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Add SVG gradient for progress bar in HTML if we can, or define it dynamically via CSS fallback */
-.radial-progress .circle-progress {
-  stroke: var(--accent-primary);
-}
-
-.radial-label {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+/* CIE Average Display */
+.cie-avg-display {
   text-align: center;
-  display: flex;
-  flex-direction: column;
+  padding: 1.5rem 1rem;
+  margin: 0.5rem 0 1rem;
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-secondary);
 }
 
-#overall-cie-value {
+.cie-avg-value {
   font-family: var(--font-title);
-  font-size: 2.25rem;
+  font-size: 2.75rem;
   font-weight: 800;
   line-height: 1;
   letter-spacing: -0.03em;
+  display: block;
 }
 
-.radial-sub {
+.cie-avg-label {
   font-size: 0.75rem;
   color: var(--text-muted);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-top: 2px;
+  display: block;
+  margin-top: 4px;
+}
+
+.cie-avg-sub {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  display: block;
 }
 
 /* Statistics Grid */
@@ -299,6 +271,60 @@ body {
   font-family: var(--font-title);
   font-size: 1.35rem;
   font-weight: 700;
+}
+
+/* ------------------------
+   RADIAL PROGRESS (CIE)
+------------------------ */
+.radial-progress-container {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  margin: 1.5rem auto;
+}
+
+.radial-progress {
+  transform: rotate(-90deg);
+  width: 100%;
+  height: 100%;
+}
+
+.circle-bg {
+  stroke: var(--card-border);
+  stroke-width: 8;
+  fill: none;
+}
+
+.circle-progress {
+  stroke: var(--accent-primary);
+  stroke-width: 8;
+  stroke-dasharray: 314;
+  stroke-dashoffset: 314;
+  stroke-linecap: round;
+  fill: none;
+  transition: stroke-dashoffset 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.radial-label {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+#overall-cie-value {
+  font-family: var(--font-title);
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.radial-sub {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-weight: 500;
 }
 
 /* Badges */
@@ -682,10 +708,7 @@ body {
   color: var(--text-primary);
   outline: none;
   padding: 0.2rem 0;
-  width: 300px;
-  max-width: 100%;
-  resize: none;
-  line-height: 1.2;
+  width: 200px;
   transition: border-color var(--transition-fast);
 }
 
@@ -908,7 +931,6 @@ body {
   background: transparent;
   outline: none;
   padding: 1rem;
-  color: var(--text-primary);
 }
 
 .modal-dialog::backdrop {
@@ -1117,41 +1139,54 @@ body {
 .toast.toast-warning { border-left: 3px solid var(--color-warning); }
 .toast.toast-danger { border-left: 3px solid var(--color-danger); }
 
-/* Undo toast styles */
-.toast.toast-undo {
-  flex-wrap: wrap;
-  min-width: 300px;
-  position: relative;
-  padding-bottom: 1.5rem;
-  overflow: hidden;
+/* Saved Semesters UI */
+.saved-semester-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-md);
+  margin-bottom: 0.5rem;
+  transition: all var(--transition-fast);
 }
 
-.toast-undo-btn {
-  background: var(--color-danger);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-sm);
-  padding: 0.3rem 0.85rem;
-  font-size: 0.8rem;
+.saved-semester-item:hover {
+  border-color: var(--accent-primary);
+}
+
+.saved-semester-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.saved-semester-name {
   font-weight: 700;
-  cursor: pointer;
-  transition: opacity var(--transition-fast);
-  white-space: nowrap;
+  font-size: 0.95rem;
+  color: var(--text-primary);
 }
 
-.toast-undo-btn:hover {
-  opacity: 0.85;
+.saved-semester-stats {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
 }
 
-.toast-progress {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 4px;
-  width: 100%;
-  background: var(--color-danger);
-  opacity: 0.6;
-  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+.saved-semester-actions {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.comparison-dialog {
+  max-width: 800px;
+}
+
+.comparison-table th, .comparison-table td {
+  text-align: center;
+}
+.comparison-table th:first-child, .comparison-table td:first-child {
+  text-align: left;
 }
 
 /* Responsive adjustments */
@@ -1263,5 +1298,59 @@ body {
     border: 1px solid #aaa !important;
     background: transparent !important;
     color: black !important;
+  }
+}
+
+/* ==========================================================================
+   TOTAL USERS BADGE
+   ========================================================================== */
+.user-count-badge {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  box-shadow: var(--shadow-md);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  z-index: 40;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0.9;
+  transition: opacity var(--transition-fast), transform var(--transition-fast);
+  pointer-events: none;
+  user-select: none;
+}
+
+.user-count-badge:hover {
+  opacity: 1;
+}
+
+.user-count-badge svg {
+  width: 14px;
+  height: 14px;
+  color: var(--accent-primary);
+  flex-shrink: 0;
+}
+
+.user-count-badge #user-count-value {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .user-count-badge {
+    bottom: 0.6rem;
+    right: 0.6rem;
+    font-size: 0.7rem;
+    padding: 0.35rem 0.6rem;
   }
 }
