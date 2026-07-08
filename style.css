@@ -931,6 +931,7 @@ body {
   background: transparent;
   outline: none;
   padding: 1rem;
+  color: var(--text-primary);
 }
 
 .modal-dialog::backdrop {
