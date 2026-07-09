@@ -1177,6 +1177,39 @@ body {
 .toast.toast-warning { border-left: 3px solid var(--color-warning); }
 .toast.toast-danger { border-left: 3px solid var(--color-danger); }
 
+.toast-undo {
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 0.9rem;
+}
+
+.toast-undo-btn {
+  background: var(--accent-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+
+.toast-undo-btn:hover {
+  opacity: 0.85;
+}
+
+.toast-progress {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 3px;
+  width: 100%;
+  background: var(--accent-primary);
+  opacity: 0.6;
+}
+
 /* Saved Semesters UI */
 .saved-semester-item {
   display: flex;

@@ -5,6 +5,8 @@
 // --- STATE MANAGEMENT ---
 let courses = [];
 let savedSemesters = [];
+let _deletedCourseBackup = null;
+let _deleteCourseUndoTimer = null;
 const DEFAULT_THEME = 'dark';
 const SAVED_SEMESTERS_KEY = 'nmit_saved_semesters';
 
@@ -890,11 +892,13 @@ function deleteCourse(id) {
   const index = courses.findIndex(c => c.id === id);
   if (index === -1) return;
   
-  const deletedName = courses[index].name;
+  const deletedCourse = courses[index];
+  _deletedCourseBackup = { course: JSON.parse(JSON.stringify(deletedCourse)), index: index };
+  
   courses.splice(index, 1);
   saveState();
   renderApp();
-  showToast(`Deleted "${deletedName}"`, 'warning');
+  showUndoDeleteToast(`Deleted "${deletedCourse.name}"`);
 }
 
 function loadPreset(branch, semester) {
@@ -1297,6 +1301,48 @@ function showUndoLoadToast(msg) {
     setTimeout(() => toast.remove(), 350);
     _deletedCoursesBackup = null;
   }, 5000);
+}
+
+function showUndoDeleteToast(msg) {
+  const existing = document.querySelector('.toast-undo');
+  if (existing) existing.remove();
+  if (_deleteCourseUndoTimer) clearTimeout(_deleteCourseUndoTimer);
+  
+  const toast = document.createElement('div');
+  toast.className = 'toast toast-warning toast-undo';
+  toast.innerHTML = `
+    <span>🗑️</span>
+    <span style="flex: 1;">${msg}</span>
+    <button class="toast-undo-btn" id="btn-undo-delete">Undo</button>
+    <div class="toast-progress"></div>
+  `;
+  toastContainer.appendChild(toast);
+  
+  const progressBar = toast.querySelector('.toast-progress');
+  requestAnimationFrame(() => {
+    progressBar.style.transition = 'width 7s linear';
+    progressBar.style.width = '0%';
+  });
+  
+  toast.querySelector('#btn-undo-delete').addEventListener('click', () => {
+    if (_deletedCourseBackup) {
+      const { course, index } = _deletedCourseBackup;
+      const insertAt = Math.min(index, courses.length);
+      courses.splice(insertAt, 0, course);
+      _deletedCourseBackup = null;
+      saveState();
+      renderApp();
+      showToast('Course restored!', 'success');
+    }
+    clearTimeout(_deleteCourseUndoTimer);
+    toast.remove();
+  });
+  
+  _deleteCourseUndoTimer = setTimeout(() => {
+    toast.style.animation = 'slideInLeft 0.35s cubic-bezier(0.16, 1, 0.3, 1) reverse';
+    setTimeout(() => toast.remove(), 350);
+    _deletedCourseBackup = null;
+  }, 7000);
 }
 
 // --- CUSTOM MODALS & TOAST POPUPS ---
