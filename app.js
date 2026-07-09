@@ -10,6 +10,9 @@ const SAVED_SEMESTERS_KEY = 'nmit_saved_semesters';
 
 // --- ELEMENT SELECTORS ---
 const themeToggle = document.getElementById('theme-toggle');
+const btnFontDec = document.getElementById('btn-font-dec');
+const btnFontReset = document.getElementById('btn-font-reset');
+const btnFontInc = document.getElementById('btn-font-inc');
 const btnInfo = document.getElementById('btn-info');
 const guidelinesModal = document.getElementById('guidelines-modal');
 const btnCloseModal = document.getElementById('btn-close-modal');
@@ -80,8 +83,14 @@ const PRESETS = {
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
+  initFontSize();
   loadState();
   renderApp();
+  
+  // Font Size controls
+  btnFontDec.addEventListener('click', () => changeFontSize(-10));
+  btnFontInc.addEventListener('click', () => changeFontSize(10));
+  btnFontReset.addEventListener('click', () => changeFontSize(0));
   
   // Set up modal controls
   btnInfo.addEventListener('click', () => guidelinesModal.showModal());
@@ -226,6 +235,34 @@ function initTheme() {
   });
 }
 
+// --- FONT SIZE MANAGEMENT ---
+let currentFontSize = 100;
+
+function initFontSize() {
+  const savedSize = localStorage.getItem('nmit_font_size');
+  if (savedSize) {
+    currentFontSize = parseInt(savedSize, 10);
+  }
+  applyFontSize();
+}
+
+function applyFontSize() {
+  document.documentElement.style.fontSize = currentFontSize + '%';
+  localStorage.setItem('nmit_font_size', currentFontSize);
+}
+
+function changeFontSize(delta) {
+  if (delta === 0) {
+    currentFontSize = 100;
+  } else {
+    currentFontSize += delta;
+    if (currentFontSize < 80) currentFontSize = 80;
+    if (currentFontSize > 150) currentFontSize = 150;
+  }
+  applyFontSize();
+  showToast(`Font Size: ${currentFontSize}%`, 'info');
+}
+
 // --- DATA PERSISTENCE ---
 function saveState() {
   localStorage.setItem('nmit_cie_courses', JSON.stringify(courses));
@@ -359,7 +396,10 @@ function renderCourseBoard() {
           <div class="input-field-group">
             <input type="number" class="input-credits" value="${course.credits}" min="1" max="10" placeholder="Credits" title="Course Credits" aria-label="Course Credits">
           </div>
-          <span class="course-badge">${isIntegrated ? 'Integrated (Lab)' : 'Non-Integrated'}</span>
+          <select class="course-type-select" title="Change course type" aria-label="Course Type">
+            <option value="${course.type}" selected>${isIntegrated ? 'Integrated (Lab)' : 'Non-Integrated'}</option>
+            <option value="${isIntegrated ? 'non-integrated' : 'integrated'}">${isIntegrated ? 'Non-Integrated' : 'Integrated (Lab)'}</option>
+          </select>
         </div>
         <div class="course-card-actions">
           <button class="btn-icon btn-duplicate" title="Duplicate Course">
@@ -622,6 +662,14 @@ function bindCardEvents(cardElement, courseId) {
     });
   });
   
+  // Course type dropdown (switch integrated <-> non-integrated)
+  const typeSelect = cardElement.querySelector('.course-type-select');
+  if (typeSelect) {
+    typeSelect.addEventListener('change', (e) => {
+      switchCourseType(courseId, e.target.value);
+    });
+  }
+
   // Duplicate course button
   cardElement.querySelector('.btn-duplicate').addEventListener('click', () => {
     duplicateCourse(courseId);
@@ -814,6 +862,28 @@ function duplicateCourse(id) {
   saveState();
   renderApp();
   showToast(`Duplicated "${original.name}"`, 'success');
+}
+
+function switchCourseType(id, newType) {
+  const course = courses.find(c => c.id === id);
+  if (!course || course.type === newType) return;
+
+  course.type = newType;
+
+  // Reset the fields that don't apply to the new type, mirroring addCourse() defaults
+  if (newType === 'non-integrated') {
+    course.la1 = course.la1 || 8;
+    course.la2 = course.la2 || 8;
+    course.lab = 0;
+  } else {
+    course.la1 = 0;
+    course.la2 = 0;
+    course.lab = course.lab || 16;
+  }
+
+  saveState();
+  renderApp();
+  showToast(`Switched "${course.name}" to ${newType === 'integrated' ? 'Integrated' : 'Non-Integrated'}`, 'success');
 }
 
 function deleteCourse(id) {

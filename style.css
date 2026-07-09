@@ -750,6 +750,43 @@ body {
   background: rgba(255, 255, 255, 0.03);
 }
 
+.course-type-select {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 0.25rem 1.4rem 0.25rem 0.6rem;
+  border-radius: var(--radius-sm);
+  background-color: rgba(0,0,0,0.05);
+  border: 1px solid var(--card-border);
+  color: var(--text-secondary);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+  background-repeat: no-repeat;
+  background-position: right 0.35rem center;
+  background-size: 0.7rem;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.course-type-select:hover,
+.course-type-select:focus {
+  border-color: var(--accent-primary);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.course-type-select option {
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 500;
+}
+
+[data-theme="dark"] .course-type-select {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
 .course-card-actions {
   display: flex;
   align-items: center;
