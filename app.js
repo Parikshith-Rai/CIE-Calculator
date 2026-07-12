@@ -62,24 +62,122 @@ const presetBranch = document.getElementById('preset-branch');
 const presetSemester = document.getElementById('preset-semester');
 const btnLoadPreset = document.getElementById('btn-load-preset');
 
+// --- DEMO DATA (used only by the "Empty Demo" button, not the branch/semester preset system) ---
+const DEMO_COURSES = [
+  { name: "Engineering Mathematics-I", type: "non-integrated", credits: 4, la1: 8, la2: 8, mse1: 40, mse2: 42, lab: 0, seePredicted: 80 },
+  { name: "Applied Physics", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 38, mse2: 40, lab: 18, seePredicted: 75 },
+  { name: "Basic Electrical Engineering", type: "non-integrated", credits: 3, la1: 9, la2: 7, mse1: 35, mse2: 38, lab: 0, seePredicted: 70 },
+  { name: "Elements of Civil Engineering", type: "non-integrated", credits: 3, la1: 7, la2: 8, mse1: 30, mse2: 32, lab: 0, seePredicted: 65 },
+  { name: "Engineering Graphics", type: "non-integrated", credits: 3, la1: 8, la2: 9, mse1: 42, mse2: 40, lab: 0, seePredicted: 85 }
+];
+
+function loadDemoCourses() {
+  courses = DEMO_COURSES.map((c, i) => ({
+    ...c,
+    id: `demo_${i}_${Date.now()}`
+  }));
+  saveState();
+  renderApp();
+  showToast('Loaded demo data', 'success');
+}
+
 // --- PRESET DATABASES ---
+// Semester 2 integrated/non-integrated determined by L-T-P from official NMIT timetable (AY 2025-26)
+// Integrated = has lab hours (P > 0): PHY102(3-0-2), ECE101(2-0-2), CSE102(2-0-2),
+//              CHY103/104(3-0-2), MEC101(2-0-2), CHY102(3-0-2)
+// Non-Integrated = no lab hours: MAT106(3-1-0), EEE102(3-0-0), HSS102(2-0-0), etc.
+
+// ── SEM 1 HELPERS ────────────────────────────────────────────────────────────
+function _itSem1() {
+  return [
+    { name: "Calculus and Linear Algebra", type: "non-integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+    { name: "Materials Chemistry", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+    { name: "Problem Solving Through Programming", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+    { name: "Engineering Graphics", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+    { name: "English", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
+  ];
+}
+
+function _nonItSem1() {
+  return [
+    { name: "Calculus and Linear Algebra", type: "non-integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+    { name: "Mathematics with MATLAB", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+    { name: "Introduction to C Programming", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+    { name: "Wave Mechanics", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+    { name: "Engineering Graphics", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
+  ];
+}
+
+// ── SEM 2 HELPERS ────────────────────────────────────────────────────────────
+// CSE / CSBS / ISE / AIDS / AIML / RAI — identical Sem 2 subjects
+function _itSem2() {
+  return [
+    { name: "Linear Algebra and Transform Techniques", type: "non-integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },   // MAT106 3-1-0
+    { name: "Quantum Computing and Modern Physics",    type: "integrated",     credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },   // PHY102 3-0-2
+    { name: "Applied Digital Logic Design",            type: "integrated",     credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },   // ECE101 2-0-2
+    { name: "Elements of Electrical Engineering",     type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },   // EEE102 3-0-0
+    { name: "Introduction to Python Programming",     type: "integrated",     credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },   // CSE102 2-0-2
+    { name: "Universal Human Values & Professional Ethics", type: "non-integrated", credits: 2, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // HSS102 2-0-0
+    { name: "Mathematics with MATLAB",                type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 },    // MAT107 EXT=0
+    { name: "Constitution of India & Global Citizenship", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 }, // HSS101 EXT=0
+    { name: "Pathways to Success",                    type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 }     // HSS133 no EXT
+  ];
+}
+
+// EEE / VLSI / ECE — use MAT105, CHY104, MEC112 instead
+function _eeeGroupSem2() {
+  return [
+    { name: "Differential Equations and Laplace Transforms", type: "non-integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // MAT105 3-1-0
+    { name: "Materials Chemistry for Devices and E-Waste",   type: "integrated",     credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // CHY104 3-0-2
+    { name: "Elements of Mechanical Engineering",            type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // MEC112 3-0-0
+    { name: "Applied Digital Logic Design",                  type: "integrated",     credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // ECE101 2-0-2
+    { name: "Environmental Science & Sustainability",        type: "non-integrated", credits: 2, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // CIV104 2-0-0
+    { name: "Universal Human Values & Professional Ethics",  type: "non-integrated", credits: 2, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // HSS102 2-0-0
+    { name: "Biology for Engineers",                         type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // BTY111 1-0-0
+    { name: "IT Skills",                                     type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 },  // CSE121 no EXT
+    { name: "Pathways to Success",                           type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 }   // HSS133 no EXT
+  ];
+}
+
+// CE / ME / AE — MAT104, CHY103 (integrated), MEC101-CAED (integrated)
+function _civilMechAeroSem2(chemName) {
+  return [
+    { name: "Matrix Algebra and Differential Equations", type: "non-integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // MAT104 3-1-0
+    { name: chemName,                                    type: "integrated",     credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // CHY103/102 3-0-2
+    { name: "Computer Aided Engineering Graphics",       type: "integrated",     credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // MEC101 2-0-2
+    { name: "Engineering Mechanics",                     type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // CIV111 3-0-0
+    { name: "Environmental Science & Sustainability",    type: "non-integrated", credits: 2, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // CIV104 2-0-0
+    { name: "Universal Human Values & Professional Ethics", type: "non-integrated", credits: 2, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // HSS102 2-0-0
+    { name: "Biology for Engineers",                     type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // BTY111 1-0-0
+    { name: "IT Skills",                                 type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // CSE121 0-0-2
+    { name: "Constitution of India & Global Citizenship", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 }, // HSS101 EXT=0
+    { name: "Pathways to Success",                       type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 }  // HSS133 no EXT
+  ];
+}
+
 const PRESETS = {
   CSE: {
-    "1": [
-      { name: "Engineering Mathematics-I", type: "non-integrated", credits: 4, la1: 8, la2: 8, mse1: 40, mse2: 42, lab: 0, seePredicted: 80 },
-      { name: "Applied Physics", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 38, mse2: 40, lab: 18, seePredicted: 75 },
-      { name: "Basic Electrical Engineering", type: "non-integrated", credits: 3, la1: 9, la2: 7, mse1: 35, mse2: 38, lab: 0, seePredicted: 70 },
-      { name: "Elements of Civil Engineering", type: "non-integrated", credits: 3, la1: 7, la2: 8, mse1: 30, mse2: 32, lab: 0, seePredicted: 65 },
-      { name: "Engineering Graphics", type: "non-integrated", credits: 3, la1: 8, la2: 9, mse1: 42, mse2: 40, lab: 0, seePredicted: 85 }
-    ],
+    "1": _itSem1(),
+    "2": _itSem2(),
     "3": [
-      { name: "Discrete Mathematical Structures", type: "non-integrated", credits: 3, la1: 9, la2: 8, mse1: 45, mse2: 42, lab: 0, seePredicted: 88 },
-      { name: "Data Structures & Applications", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 40, mse2: 38, lab: 19, seePredicted: 82 },
-      { name: "Computer Organization & Arch.", type: "non-integrated", credits: 3, la1: 8, la2: 8, mse1: 35, mse2: 37, lab: 0, seePredicted: 72 },
-      { name: "Analog & Digital Electronics", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 32, mse2: 35, lab: 17, seePredicted: 68 },
-      { name: "Object Oriented Programming", type: "integrated", credits: 3, la1: 0, la2: 0, mse1: 38, mse2: 42, lab: 18, seePredicted: 80 }
+      { name: "Discrete Mathematical Structures", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 88 },
+      { name: "Data Structures & Applications", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 82 },
+      { name: "Computer Organization & Arch.", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 72 },
+      { name: "Analog & Digital Electronics", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 68 },
+      { name: "Object Oriented Programming", type: "integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
     ]
-  }
+  },
+  CSBS: { "1": _itSem1(), "2": _itSem2() },
+  ISE:  { "1": _itSem1(), "2": _itSem2() },
+  AIDS: { "1": _itSem1(), "2": _itSem2() },
+  AIML: { "1": _itSem1(), "2": _itSem2() },
+  RAI:  { "1": _nonItSem1(), "2": _itSem2() },
+  EEE:  { "1": _itSem1(), "2": _eeeGroupSem2() },
+  VLSI: { "1": _itSem1(), "2": _eeeGroupSem2() },
+  ECE:  { "1": _itSem1(), "2": _eeeGroupSem2() },
+  CE:   { "1": _nonItSem1(), "2": _civilMechAeroSem2("Chemistry for Civil Engineering") },
+  ME:   { "1": _nonItSem1(), "2": _civilMechAeroSem2("Materials Chemistry and Energy Applications") },
+  AE:   { "1": _nonItSem1(), "2": _civilMechAeroSem2("Materials Chemistry and Energy Applications") }
 };
 
 // --- INITIALIZATION ---
@@ -104,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Set up add buttons
   btnAddNonIntegrated.addEventListener('click', () => addCourse('non-integrated'));
   btnAddIntegrated.addEventListener('click', () => addCourse('integrated'));
-  btnEmptyDemo.addEventListener('click', () => loadPreset('CSE', '1'));
+  btnEmptyDemo.addEventListener('click', () => loadDemoCourses());
   
   // Presets controls
   btnLoadPreset.addEventListener('click', () => {
