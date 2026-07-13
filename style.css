@@ -669,6 +669,16 @@ body {
   border-left-color: var(--accent-primary);
 }
 
+.course-card.lab-only {
+  border-left-color: hsl(155, 70%, 45%);
+}
+
+.marks-inputs-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
 @keyframes slideIn {
   from {
     opacity: 0;

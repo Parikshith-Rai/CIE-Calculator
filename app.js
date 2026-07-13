@@ -20,6 +20,7 @@ const guidelinesModal = document.getElementById('guidelines-modal');
 const btnCloseModal = document.getElementById('btn-close-modal');
 const btnAddNonIntegrated = document.getElementById('btn-add-non-integrated');
 const btnAddIntegrated = document.getElementById('btn-add-integrated');
+const btnAddLab = document.getElementById('btn-add-lab');
 const emptyState = document.getElementById('courses-empty-state');
 const btnEmptyDemo = document.getElementById('btn-empty-demo');
 const courseCardsList = document.getElementById('course-cards-list');
@@ -101,7 +102,7 @@ function _itSem1() {
 function _nonItSem1() {
   return [
     { name: "Calculus and Linear Algebra", type: "non-integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
-    { name: "Mathematics with MATLAB", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+    { name: "Mathematics with MATLAB", type: "lab", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, viva: 0, finalLab: 0, seePredicted: 0 },
     { name: "Introduction to C Programming", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
     { name: "Wave Mechanics", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
     { name: "Engineering Graphics", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
@@ -118,7 +119,7 @@ function _itSem2() {
     { name: "Elements of Electrical Engineering",     type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },   // EEE102 3-0-0
     { name: "Introduction to Python Programming",     type: "integrated",     credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },   // CSE102 2-0-2
     { name: "Universal Human Values & Professional Ethics", type: "non-integrated", credits: 2, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }, // HSS102 2-0-0
-    { name: "Mathematics with MATLAB",                type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 },    // MAT107 EXT=0
+    { name: "Mathematics with MATLAB",                type: "lab",             credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, viva: 0, finalLab: 0, seePredicted: 0 },    // MAT107 EXT=0
     { name: "Constitution of India & Global Citizenship", type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 }, // HSS101 EXT=0
     { name: "Pathways to Success",                    type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 }     // HSS133 no EXT
   ];
@@ -202,6 +203,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Set up add buttons
   btnAddNonIntegrated.addEventListener('click', () => addCourse('non-integrated'));
   btnAddIntegrated.addEventListener('click', () => addCourse('integrated'));
+  btnAddLab.addEventListener('click', () => addCourse('lab'));
   btnEmptyDemo.addEventListener('click', () => loadDemoCourses());
   
   // Presets controls
@@ -391,6 +393,13 @@ function loadState() {
 
 // --- CALCULATION HELPER FUNCTIONS ---
 function calculateCourseCIE(course) {
+  if (course.type === 'lab') {
+    // Lab-only: Viva (max 10) + Final Lab (max 40) = max 50
+    const viva = course.viva || 0;
+    const finalLab = course.finalLab || 0;
+    return parseFloat((viva + finalLab).toFixed(1));
+  }
+  
   const mse1Scaled = (course.mse1 || 0) * 0.3;
   const mse2Scaled = (course.mse2 || 0) * 0.3;
   const la1Val = course.la1 || 0;
@@ -482,10 +491,11 @@ function renderCourseBoard() {
     const cie = calculateCourseCIE(course);
     const status = getCIEStatus(cie);
     const isIntegrated = course.type === 'integrated';
+    const isLab = course.type === 'lab';
     
     // Create card element
     const card = document.createElement('div');
-    card.className = `glass-card course-card ${isIntegrated ? 'integrated' : ''}`;
+    card.className = `glass-card course-card ${isIntegrated ? 'integrated' : ''} ${isLab ? 'lab-only' : ''}`;
     card.dataset.id = course.id;
     
     // Header section
@@ -497,8 +507,9 @@ function renderCourseBoard() {
             <input type="number" class="input-credits" value="${course.credits}" min="1" max="10" placeholder="Credits" title="Course Credits" aria-label="Course Credits">
           </div>
           <select class="course-type-select" title="Change course type" aria-label="Course Type">
-            <option value="${course.type}" selected>${isIntegrated ? 'Integrated (Lab)' : 'Non-Integrated'}</option>
-            <option value="${isIntegrated ? 'non-integrated' : 'integrated'}">${isIntegrated ? 'Non-Integrated' : 'Integrated (Lab)'}</option>
+            <option value="non-integrated" ${course.type === 'non-integrated' ? 'selected' : ''}>Theory (Non-Integrated)</option>
+            <option value="integrated" ${course.type === 'integrated' ? 'selected' : ''}>Integrated (Lab)</option>
+            <option value="lab" ${course.type === 'lab' ? 'selected' : ''}>Lab-Only Course</option>
           </select>
         </div>
         <div class="course-card-actions">
@@ -520,7 +531,29 @@ function renderCourseBoard() {
     
     // Body section (inputs)
     let bodyHTML = '';
-    if (!isIntegrated) {
+    if (isLab) {
+      // Lab-only course: Viva (max 10) + Final Lab Assessment (max 40)
+      bodyHTML = `
+        <div class="course-card-body">
+          <div class="marks-inputs-grid marks-inputs-grid-2">
+            <div class="input-field-group">
+              <label>Viva Marks <span class="label-max-tag">Max 10</span></label>
+              <input type="number" class="input-mark input-viva" value="${course.viva || 0}" min="0" max="10" step="0.5" aria-label="Viva marks">
+            </div>
+            <div class="input-field-group">
+              <label>Final Lab <span class="label-max-tag">Max 40</span></label>
+              <input type="number" class="input-mark input-finallab" value="${course.finalLab || 0}" min="0" max="40" step="0.5" aria-label="Final lab marks">
+            </div>
+          </div>
+          
+          <div class="course-card-result">
+            <span class="result-cie-value">${cie}</span>
+            <span class="result-cie-label">CIE Score</span>
+            <span class="status-badge ${status.class}">${status.label}</span>
+          </div>
+        </div>
+      `;
+    } else if (!isIntegrated) {
       // Non-integrated (LA1, LA2, MSE1, MSE2)
       bodyHTML = `
         <div class="course-card-body">
@@ -713,6 +746,8 @@ function bindCardEvents(cardElement, courseId) {
         if (scalingSpan) scalingSpan.innerText = `→ ${(val * 0.3).toFixed(1)}`;
       }
       if (inputEl.classList.contains('input-lab')) course.lab = val;
+      if (inputEl.classList.contains('input-viva')) course.viva = val;
+      if (inputEl.classList.contains('input-finallab')) course.finalLab = val;
       
       // Update this card's CIE score and UI components reactively
       const newCie = calculateCourseCIE(course);
@@ -928,23 +963,26 @@ function calculateSGPA() {
 
 // --- COURSE OPERATIONS ---
 function addCourse(type) {
+  const typeLabel = type === 'non-integrated' ? 'Theory' : type === 'lab' ? 'Lab' : 'Integrated';
   const newCourse = {
     id: 'course_' + Date.now(),
-    name: type === 'non-integrated' ? `Theory Course ${courses.length + 1}` : `Integrated Course ${courses.length + 1}`,
+    name: `${typeLabel} Course ${courses.length + 1}`,
     type: type,
-    credits: 4,
+    credits: type === 'lab' ? 1 : 4,
     la1: type === 'non-integrated' ? 8 : 0,
     la2: type === 'non-integrated' ? 8 : 0,
-    mse1: 40,
-    mse2: 40,
+    mse1: type === 'lab' ? 0 : 40,
+    mse2: type === 'lab' ? 0 : 40,
     lab: type === 'integrated' ? 16 : 0,
-    seePredicted: 80
+    viva: type === 'lab' ? 0 : 0,
+    finalLab: type === 'lab' ? 0 : 0,
+    seePredicted: type === 'lab' ? 0 : 80
   };
   
   courses.push(newCourse);
   saveState();
   renderApp();
-  showToast(`Added new ${type} course`, 'success');
+  showToast(`Added new ${typeLabel} course`, 'success');
 }
 
 function duplicateCourse(id) {
@@ -970,20 +1008,33 @@ function switchCourseType(id, newType) {
 
   course.type = newType;
 
-  // Reset the fields that don't apply to the new type, mirroring addCourse() defaults
+  // Reset fields that don't apply to new type
   if (newType === 'non-integrated') {
     course.la1 = course.la1 || 8;
     course.la2 = course.la2 || 8;
     course.lab = 0;
-  } else {
+    course.viva = 0;
+    course.finalLab = 0;
+  } else if (newType === 'integrated') {
     course.la1 = 0;
     course.la2 = 0;
     course.lab = course.lab || 16;
+    course.viva = 0;
+    course.finalLab = 0;
+  } else if (newType === 'lab') {
+    course.la1 = 0;
+    course.la2 = 0;
+    course.mse1 = 0;
+    course.mse2 = 0;
+    course.lab = 0;
+    course.viva = course.viva || 0;
+    course.finalLab = course.finalLab || 0;
   }
 
   saveState();
   renderApp();
-  showToast(`Switched "${course.name}" to ${newType === 'integrated' ? 'Integrated' : 'Non-Integrated'}`, 'success');
+  const typeLabel = newType === 'integrated' ? 'Integrated' : newType === 'lab' ? 'Lab-Only' : 'Non-Integrated';
+  showToast(`Switched "${course.name}" to ${typeLabel}`, 'success');
 }
 
 function deleteCourse(id) {
