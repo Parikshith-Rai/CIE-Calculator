@@ -1146,6 +1146,10 @@ function loadPreset(branch, semester) {
   
   saveState();
   renderApp();
+  
+  // Automatically save to "Saved Semesters"
+  saveCurrentSemester(`${branch} Sem ${semester}`);
+  
   showToast(`Loaded ${branch} Semester ${semester} preset successfully`, 'success');
 }
 
