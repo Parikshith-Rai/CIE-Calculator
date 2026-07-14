@@ -10,6 +10,19 @@ let _deleteCourseUndoTimer = null;
 const DEFAULT_THEME = 'dark';
 const SAVED_SEMESTERS_KEY = 'nmit_saved_semesters';
 
+let cieGuidelines = {
+  niLa1Max: 10,
+  niLa2Max: 10,
+  niMseScale: 0.3,
+  inTheoryWt: 0.6,
+  inPracWt: 0.4,
+  inLabMax: 20,
+  loVivaMax: 10,
+  loFinalLabMax: 40
+};
+const DEFAULT_CIE_GUIDELINES = { ...cieGuidelines };
+const CIE_GUIDELINES_KEY = 'nmit_cie_guidelines';
+
 // --- ELEMENT SELECTORS ---
 const themeToggle = document.getElementById('theme-toggle');
 const btnFontDec = document.getElementById('btn-font-dec');
@@ -18,6 +31,11 @@ const btnFontInc = document.getElementById('btn-font-inc');
 const btnInfo = document.getElementById('btn-info');
 const guidelinesModal = document.getElementById('guidelines-modal');
 const btnCloseModal = document.getElementById('btn-close-modal');
+const btnOpenCieSettings = document.getElementById('btn-open-cie-settings');
+const cieSettingsModal = document.getElementById('cie-settings-modal');
+const btnCloseCieSettings = document.getElementById('btn-close-cie-settings');
+const cieSettingsForm = document.getElementById('cie-settings-form');
+const btnResetCieSettings = document.getElementById('btn-reset-cie-settings');
 const btnAddNonIntegrated = document.getElementById('btn-add-non-integrated');
 const btnAddIntegrated = document.getElementById('btn-add-integrated');
 const btnAddLab = document.getElementById('btn-add-lab');
@@ -200,6 +218,45 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.target === guidelinesModal) guidelinesModal.close();
   });
   
+  // CIE Settings Modal controls
+  btnOpenCieSettings.addEventListener('click', () => {
+    guidelinesModal.close();
+    populateCieSettingsForm();
+    cieSettingsModal.showModal();
+  });
+  btnCloseCieSettings.addEventListener('click', () => cieSettingsModal.close());
+  cieSettingsModal.addEventListener('click', (e) => {
+    if (e.target === cieSettingsModal) cieSettingsModal.close();
+  });
+  
+  btnResetCieSettings.addEventListener('click', () => {
+    if (confirm('Reset CIE guidelines to default values?')) {
+      cieGuidelines = { ...DEFAULT_CIE_GUIDELINES };
+      populateCieSettingsForm();
+      saveState();
+      renderApp();
+      showToast('CIE guidelines reset to defaults', 'success');
+    }
+  });
+
+  cieSettingsForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    cieGuidelines = {
+      niLa1Max: parseFloat(document.getElementById('set-ni-la1-max').value) || 0,
+      niLa2Max: parseFloat(document.getElementById('set-ni-la2-max').value) || 0,
+      niMseScale: parseFloat(document.getElementById('set-ni-mse-scale').value) || 0,
+      inTheoryWt: parseFloat(document.getElementById('set-in-theory-wt').value) || 0,
+      inPracWt: parseFloat(document.getElementById('set-in-prac-wt').value) || 0,
+      inLabMax: parseFloat(document.getElementById('set-in-lab-max').value) || 0,
+      loVivaMax: parseFloat(document.getElementById('set-lo-viva-max').value) || 0,
+      loFinalLabMax: parseFloat(document.getElementById('set-lo-finallab-max').value) || 0
+    };
+    saveState();
+    renderApp();
+    cieSettingsModal.close();
+    showToast('CIE guidelines updated', 'success');
+  });
+  
   // Set up add buttons
   btnAddNonIntegrated.addEventListener('click', () => addCourse('non-integrated'));
   btnAddIntegrated.addEventListener('click', () => addCourse('integrated'));
@@ -365,10 +422,22 @@ function changeFontSize(delta) {
   showToast(`Font Size: ${currentFontSize}%`, 'info');
 }
 
+function populateCieSettingsForm() {
+  document.getElementById('set-ni-la1-max').value = cieGuidelines.niLa1Max;
+  document.getElementById('set-ni-la2-max').value = cieGuidelines.niLa2Max;
+  document.getElementById('set-ni-mse-scale').value = cieGuidelines.niMseScale;
+  document.getElementById('set-in-theory-wt').value = cieGuidelines.inTheoryWt;
+  document.getElementById('set-in-prac-wt').value = cieGuidelines.inPracWt;
+  document.getElementById('set-in-lab-max').value = cieGuidelines.inLabMax;
+  document.getElementById('set-lo-viva-max').value = cieGuidelines.loVivaMax;
+  document.getElementById('set-lo-finallab-max').value = cieGuidelines.loFinalLabMax;
+}
+
 // --- DATA PERSISTENCE ---
 function saveState() {
   localStorage.setItem('nmit_cie_courses', JSON.stringify(courses));
   localStorage.setItem(SAVED_SEMESTERS_KEY, JSON.stringify(savedSemesters));
+  localStorage.setItem(CIE_GUIDELINES_KEY, JSON.stringify(cieGuidelines));
 }
 
 function loadState() {
@@ -389,19 +458,27 @@ function loadState() {
       savedSemesters = [];
     }
   }
+
+  const savedGuidelines = localStorage.getItem(CIE_GUIDELINES_KEY);
+  if (savedGuidelines) {
+    try {
+      cieGuidelines = { ...DEFAULT_CIE_GUIDELINES, ...JSON.parse(savedGuidelines) };
+    } catch (e) {
+      cieGuidelines = { ...DEFAULT_CIE_GUIDELINES };
+    }
+  }
 }
 
 // --- CALCULATION HELPER FUNCTIONS ---
 function calculateCourseCIE(course) {
   if (course.type === 'lab') {
-    // Lab-only: Viva (max 10) + Final Lab (max 40) = max 50
     const viva = course.viva || 0;
     const finalLab = course.finalLab || 0;
     return parseFloat((viva + finalLab).toFixed(1));
   }
   
-  const mse1Scaled = (course.mse1 || 0) * 0.3;
-  const mse2Scaled = (course.mse2 || 0) * 0.3;
+  const mse1Scaled = (course.mse1 || 0) * cieGuidelines.niMseScale;
+  const mse2Scaled = (course.mse2 || 0) * cieGuidelines.niMseScale;
   const la1Val = course.la1 || 0;
   const la2Val = course.la2 || 0;
   
@@ -410,7 +487,7 @@ function calculateCourseCIE(course) {
   } else {
     const theoryPart = la1Val + la2Val + mse1Scaled + mse2Scaled;
     const labVal = course.lab || 0;
-    return parseFloat(((theoryPart * 0.6) + (labVal * 0.4)).toFixed(1));
+    return parseFloat(((theoryPart * cieGuidelines.inTheoryWt) + (labVal * cieGuidelines.inPracWt)).toFixed(1));
   }
 }
 
@@ -537,12 +614,12 @@ function renderCourseBoard() {
         <div class="course-card-body">
           <div class="marks-inputs-grid marks-inputs-grid-2">
             <div class="input-field-group">
-              <label>Viva Marks <span class="label-max-tag">Max 10</span></label>
-              <input type="number" class="input-mark input-viva" value="${course.viva || 0}" min="0" max="10" step="0.5" aria-label="Viva marks">
+              <label>Viva Marks <span class="label-max-tag">Max ${cieGuidelines.loVivaMax}</span></label>
+              <input type="number" class="input-mark input-viva" value="${course.viva || 0}" min="0" max="${cieGuidelines.loVivaMax}" step="0.5" aria-label="Viva marks">
             </div>
             <div class="input-field-group">
-              <label>Final Lab <span class="label-max-tag">Max 40</span></label>
-              <input type="number" class="input-mark input-finallab" value="${course.finalLab || 0}" min="0" max="40" step="0.5" aria-label="Final lab marks">
+              <label>Final Lab <span class="label-max-tag">Max ${cieGuidelines.loFinalLabMax}</span></label>
+              <input type="number" class="input-mark input-finallab" value="${course.finalLab || 0}" min="0" max="${cieGuidelines.loFinalLabMax}" step="0.5" aria-label="Final lab marks">
             </div>
           </div>
           
@@ -559,25 +636,25 @@ function renderCourseBoard() {
         <div class="course-card-body">
           <div class="marks-inputs-grid">
             <div class="input-field-group">
-              <label>LA-1 <span class="label-max-tag">Max 10</span></label>
-              <input type="number" class="input-mark input-la1" value="${course.la1}" min="0" max="10" step="0.5" aria-label="LA-1 marks">
+              <label>LA-1 <span class="label-max-tag">Max ${cieGuidelines.niLa1Max}</span></label>
+              <input type="number" class="input-mark input-la1" value="${course.la1}" min="0" max="${cieGuidelines.niLa1Max}" step="0.5" aria-label="LA-1 marks">
             </div>
             <div class="input-field-group">
-              <label>LA-2 <span class="label-max-tag">Max 10</span></label>
-              <input type="number" class="input-mark input-la2" value="${course.la2}" min="0" max="10" step="0.5" aria-label="LA-2 marks">
+              <label>LA-2 <span class="label-max-tag">Max ${cieGuidelines.niLa2Max}</span></label>
+              <input type="number" class="input-mark input-la2" value="${course.la2}" min="0" max="${cieGuidelines.niLa2Max}" step="0.5" aria-label="LA-2 marks">
             </div>
             <div class="input-field-group">
               <label>MSE-1 <span class="label-max-tag">Max 50</span></label>
               <div class="input-numeric-wrapper">
                 <input type="number" class="input-mark input-mse1" value="${course.mse1}" min="0" max="50" step="0.5" aria-label="MSE-1 marks">
-                <span class="scaling-info">→ ${(course.mse1 * 0.3).toFixed(1)}</span>
+                <span class="scaling-info">→ ${(course.mse1 * cieGuidelines.niMseScale).toFixed(1)}</span>
               </div>
             </div>
             <div class="input-field-group">
               <label>MSE-2 <span class="label-max-tag">Max 50</span></label>
               <div class="input-numeric-wrapper">
                 <input type="number" class="input-mark input-mse2" value="${course.mse2}" min="0" max="50" step="0.5" aria-label="MSE-2 marks">
-                <span class="scaling-info">→ ${(course.mse2 * 0.3).toFixed(1)}</span>
+                <span class="scaling-info">→ ${(course.mse2 * cieGuidelines.niMseScale).toFixed(1)}</span>
               </div>
             </div>
           </div>
@@ -598,19 +675,19 @@ function renderCourseBoard() {
               <label>MSE-1 <span class="label-max-tag">Max 50</span></label>
               <div class="input-numeric-wrapper">
                 <input type="number" class="input-mark input-mse1" value="${course.mse1}" min="0" max="50" step="0.5" aria-label="MSE-1 marks">
-                <span class="scaling-info">→ ${(course.mse1 * 0.3).toFixed(1)}</span>
+                <span class="scaling-info">→ ${(course.mse1 * cieGuidelines.niMseScale).toFixed(1)}</span>
               </div>
             </div>
             <div class="input-field-group">
               <label>MSE-2 <span class="label-max-tag">Max 50</span></label>
               <div class="input-numeric-wrapper">
                 <input type="number" class="input-mark input-mse2" value="${course.mse2}" min="0" max="50" step="0.5" aria-label="MSE-2 marks">
-                <span class="scaling-info">→ ${(course.mse2 * 0.3).toFixed(1)}</span>
+                <span class="scaling-info">→ ${(course.mse2 * cieGuidelines.niMseScale).toFixed(1)}</span>
               </div>
             </div>
             <div class="input-field-group span-2">
-              <label>Lab Assessment <span class="label-max-tag">Max 20</span></label>
-              <input type="number" class="input-mark input-lab" value="${course.lab}" min="0" max="20" step="0.5" aria-label="Lab marks">
+              <label>Lab Assessment <span class="label-max-tag">Max ${cieGuidelines.inLabMax}</span></label>
+              <input type="number" class="input-mark input-lab" value="${course.lab}" min="0" max="${cieGuidelines.inLabMax}" step="0.5" aria-label="Lab marks">
             </div>
           </div>
           
@@ -737,13 +814,13 @@ function bindCardEvents(cardElement, courseId) {
         course.mse1 = val;
         // Update live scaling text
         const scalingSpan = inputEl.nextElementSibling;
-        if (scalingSpan) scalingSpan.innerText = `→ ${(val * 0.3).toFixed(1)}`;
+        if (scalingSpan) scalingSpan.innerText = `→ ${(val * cieGuidelines.niMseScale).toFixed(1)}`;
       }
       if (inputEl.classList.contains('input-mse2')) {
         course.mse2 = val;
         // Update live scaling text
         const scalingSpan = inputEl.nextElementSibling;
-        if (scalingSpan) scalingSpan.innerText = `→ ${(val * 0.3).toFixed(1)}`;
+        if (scalingSpan) scalingSpan.innerText = `→ ${(val * cieGuidelines.niMseScale).toFixed(1)}`;
       }
       if (inputEl.classList.contains('input-lab')) course.lab = val;
       if (inputEl.classList.contains('input-viva')) course.viva = val;

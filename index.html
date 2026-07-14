@@ -317,6 +317,88 @@
             </tbody>
           </table>
         </div>
+        <div style="margin-top: 1.5rem; text-align: center;">
+          <button id="btn-open-cie-settings" class="btn-primary">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20V10M18 20V4M6 20v-4"></path>
+            </svg>
+            Set CIE Guidelines
+          </button>
+        </div>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- CIE Settings Modal -->
+  <dialog id="cie-settings-modal" class="modal-dialog">
+    <div class="modal-content glass-card">
+      <div class="modal-header">
+        <h2>CIE Calculation Guidelines</h2>
+        <button id="btn-close-cie-settings" class="btn-icon" aria-label="Close modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form id="cie-settings-form">
+          <div class="settings-section">
+            <h3>Theory (Non-Integrated) Course</h3>
+            <div class="marks-inputs-grid-2">
+              <div class="input-field-group">
+                <label>LA-1 Max</label>
+                <input type="number" id="set-ni-la1-max" value="10" min="0" step="1">
+              </div>
+              <div class="input-field-group">
+                <label>LA-2 Max</label>
+                <input type="number" id="set-ni-la2-max" value="10" min="0" step="1">
+              </div>
+              <div class="input-field-group">
+                <label>MSE Scale Multiplier</label>
+                <input type="number" id="set-ni-mse-scale" value="0.3" min="0" step="0.01">
+                <small class="text-muted">e.g., 0.3 scales 50 to 15 marks</small>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section" style="margin-top: 1.5rem;">
+            <h3>Integrated (Theory + Lab) Course</h3>
+            <div class="marks-inputs-grid-2">
+              <div class="input-field-group">
+                <label>Theory Weight</label>
+                <input type="number" id="set-in-theory-wt" value="0.6" min="0" max="1" step="0.01">
+              </div>
+              <div class="input-field-group">
+                <label>Practical Weight</label>
+                <input type="number" id="set-in-prac-wt" value="0.4" min="0" max="1" step="0.01">
+              </div>
+              <div class="input-field-group">
+                <label>Lab Assessment Max</label>
+                <input type="number" id="set-in-lab-max" value="20" min="0" step="1">
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section" style="margin-top: 1.5rem;">
+            <h3>Lab-Only Course</h3>
+            <div class="marks-inputs-grid-2">
+              <div class="input-field-group">
+                <label>Viva Max</label>
+                <input type="number" id="set-lo-viva-max" value="10" min="0" step="1">
+              </div>
+              <div class="input-field-group">
+                <label>Final Lab Max</label>
+                <input type="number" id="set-lo-finallab-max" value="40" min="0" step="1">
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 1rem;">
+            <button type="button" id="btn-reset-cie-settings" class="btn-secondary">Reset Defaults</button>
+            <button type="submit" class="btn-primary">Save Guidelines</button>
+          </div>
+        </form>
       </div>
     </div>
   </dialog>
