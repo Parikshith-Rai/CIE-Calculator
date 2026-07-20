@@ -63,6 +63,8 @@ const inputSemesterName = document.getElementById('input-semester-name');
 const btnSaveSemester = document.getElementById('btn-save-semester');
 const savedSemestersList = document.getElementById('saved-semesters-list');
 const btnCompareSemesters = document.getElementById('btn-compare-semesters');
+const performanceContent = document.getElementById('performance-content');
+const performanceTag = document.getElementById('performance-tag');
 const comparisonModal = document.getElementById('comparison-modal');
 const btnCloseCompare = document.getElementById('btn-close-compare');
 const comparisonTbody = document.getElementById('comparison-tbody');
@@ -552,6 +554,7 @@ function getSEETargets(cie) {
 function renderApp() {
   renderCourseBoard();
   renderSidebar();
+  renderPerformanceInsights();
 }
 
 function renderCourseBoard() {
@@ -1002,6 +1005,7 @@ function updateSidebarSgpaList() {
       course.seePredicted = parseInt(e.target.value);
       saveState();
       calculateSGPA();
+      renderPerformanceInsights();
     });
     
     // Sum for SGPA
@@ -1036,6 +1040,160 @@ function calculateSGPA() {
   // Set SGPA progress bar fill (10 is max GPA)
   const barPercent = (sgpa / 10) * 100;
   sgpaProgressBar.style.width = `${barPercent}%`;
+}
+
+// --- PERFORMANCE INSIGHTS ---
+function renderPerformanceInsights() {
+  if (!performanceContent) return;
+
+  if (courses.length === 0) {
+    performanceContent.innerHTML = '<p class="card-desc text-center" style="margin: 0;">Add courses to see your personalized performance insights.</p>';
+    if (performanceTag) performanceTag.textContent = 'Insights';
+    return;
+  }
+
+  // Build a per-course performance snapshot
+  const snapshots = courses.map(course => {
+    const cie = calculateCourseCIE(course);
+    const eligible = cie >= 20;
+    const predictedSEE = course.seePredicted !== undefined ? course.seePredicted : 80;
+    const finalScore = eligible ? Math.min(100, Math.round(cie + (predictedSEE / 2))) : null;
+    const gradeObj = eligible ? getGradePoints(finalScore) : { grade: 'F', points: 0, class: 'g-f' };
+    return {
+      name: course.name || 'Untitled Course',
+      credits: parseInt(course.credits) || 0,
+      cie,
+      eligible,
+      finalScore,
+      grade: gradeObj.grade,
+      points: gradeObj.points
+    };
+  });
+
+  const totalCredits = snapshots.reduce((sum, c) => sum + c.credits, 0);
+  const totalGradePoints = snapshots.reduce((sum, c) => sum + (c.points * c.credits), 0);
+  const sgpa = totalCredits > 0 ? (totalGradePoints / totalCredits) : 0;
+  const avgCie = snapshots.reduce((sum, c) => sum + c.cie, 0) / snapshots.length;
+
+  // Classify subjects
+  const focusSubjects = snapshots
+    .filter(c => !c.eligible || c.points <= 4)
+    .sort((a, b) => a.points - b.points || a.cie - b.cie);
+  const watchSubjects = snapshots
+    .filter(c => c.eligible && c.points === 5)
+    .sort((a, b) => a.cie - b.cie);
+  const goodSubjects = snapshots
+    .filter(c => c.eligible && c.points >= 8)
+    .sort((a, b) => b.points - a.points);
+
+  // Overall summary banner
+  const ineligibleCount = snapshots.filter(c => !c.eligible).length;
+  let overallClass, overallIcon, overallText;
+
+  if (ineligibleCount > 0) {
+    overallClass = 'perf-danger';
+    overallIcon = '⚠️';
+    overallText = `You have <strong>${ineligibleCount}</strong> subject${ineligibleCount > 1 ? 's' : ''} currently below the SEE eligibility cutoff. Fixing this comes first, before anything else.`;
+  } else if (sgpa >= 8.5) {
+    overallClass = 'perf-good';
+    overallIcon = '🌟';
+    overallText = `Excellent work — your projected SGPA is <strong>${sgpa.toFixed(2)}</strong>. Stay consistent through your SEE exams to lock this in.`;
+  } else if (sgpa >= 7) {
+    overallClass = 'perf-good';
+    overallIcon = '👍';
+    overallText = `Solid performance — projected SGPA of <strong>${sgpa.toFixed(2)}</strong>. A few targeted pushes could take you into distinction range.`;
+  } else if (sgpa >= 5.5) {
+    overallClass = 'perf-warning';
+    overallIcon = '📈';
+    overallText = `You're doing okay — projected SGPA of <strong>${sgpa.toFixed(2)}</strong>. Consistent effort in your weaker subjects will move this up noticeably.`;
+  } else {
+    overallClass = 'perf-warning';
+    overallIcon = '🔧';
+    overallText = `Your projected SGPA of <strong>${sgpa.toFixed(2)}</strong> has real room to grow. Focus on the subjects flagged below to turn things around.`;
+  }
+
+  let html = `
+    <div class="perf-summary-row">
+      <div class="perf-summary-icon ${overallClass}">${overallIcon}</div>
+      <div class="perf-summary-text">${overallText}</div>
+    </div>
+  `;
+
+  if (focusSubjects.length > 0) {
+    html += `<div class="perf-section-label">Needs Focus</div><div class="perf-list">`;
+    focusSubjects.slice(0, 4).forEach(c => {
+      const reason = !c.eligible
+        ? `CIE is ${c.cie}/50 — below the 20-mark cutoff to sit for the SEE.`
+        : `Trending towards a ${c.grade} grade (${c.points} pts) — needs stronger SEE prep.`;
+      html += `<div class="perf-item perf-item-focus"><span class="perf-item-icon">🔻</span><div><strong>${c.name}</strong> — ${reason}</div></div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (watchSubjects.length > 0) {
+    html += `<div class="perf-section-label">Keep an Eye On</div><div class="perf-list">`;
+    watchSubjects.slice(0, 3).forEach(c => {
+      html += `<div class="perf-item perf-item-watch"><span class="perf-item-icon">🟡</span><div><strong>${c.name}</strong> — Currently tracking a C grade. A stronger SEE attempt can lift this to a B or higher.</div></div>`;
+    });
+    html += `</div>`;
+  }
+
+  if (goodSubjects.length > 0) {
+    html += `<div class="perf-section-label">Doing Well</div><div class="perf-list">`;
+    goodSubjects.slice(0, 3).forEach(c => {
+      html += `<div class="perf-item perf-item-good"><span class="perf-item-icon">✅</span><div><strong>${c.name}</strong> — On track for a ${c.grade} grade. Great consistency, keep it up.</div></div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Suggestions
+  const suggestions = [];
+  if (focusSubjects.length > 0) {
+    suggestions.push(`Prioritize revision time for <strong>${focusSubjects[0].name}</strong> first — it's currently your weakest link.`);
+  }
+  if (avgCie < 35) {
+    suggestions.push(`Your average CIE is <strong>${avgCie.toFixed(1)}/50</strong>. Since Learning Assignments and MSEs are already locked in, put your SEE prep time toward the topics most tested in mid-sems.`);
+  } else {
+    suggestions.push(`Your average CIE of <strong>${avgCie.toFixed(1)}/50</strong> gives you a healthy cushion — steady SEE performance should be enough to hold or improve your grades.`);
+  }
+  if (goodSubjects.length > 0 && focusSubjects.length > 0) {
+    suggestions.push(`Try applying the study habits that work in <strong>${goodSubjects[0].name}</strong> to your weaker subjects — same effort, different subject.`);
+  }
+
+  // Trend vs most recently saved semester
+  if (savedSemesters.length > 0) {
+    const lastSem = savedSemesters[savedSemesters.length - 1];
+    if (lastSem && typeof lastSem.sgpa === 'number') {
+      const diff = sgpa - lastSem.sgpa;
+      if (diff > 0.05) {
+        suggestions.push(`You're projected to improve by <strong>+${diff.toFixed(2)}</strong> SGPA compared to "${lastSem.name}" — nice upward trend, keep it going.`);
+      } else if (diff < -0.05) {
+        suggestions.push(`This semester is trending <strong>${diff.toFixed(2)}</strong> lower than "${lastSem.name}". Worth reviewing what changed in your study routine.`);
+      }
+    }
+  }
+
+  if (suggestions.length > 0) {
+    html += `<div class="perf-section-label">Suggestions</div><div class="perf-list">`;
+    suggestions.forEach(s => {
+      html += `<div class="perf-item perf-item-suggestion"><span class="perf-item-icon">💡</span><div>${s}</div></div>`;
+    });
+    html += `</div>`;
+  }
+
+  performanceContent.innerHTML = html;
+
+  if (performanceTag) {
+    if (ineligibleCount > 0) {
+      performanceTag.textContent = 'Action Needed';
+    } else if (sgpa >= 8.5) {
+      performanceTag.textContent = 'Excellent';
+    } else if (sgpa >= 7) {
+      performanceTag.textContent = 'Good';
+    } else {
+      performanceTag.textContent = 'Improving';
+    }
+  }
 }
 
 // --- COURSE OPERATIONS ---
