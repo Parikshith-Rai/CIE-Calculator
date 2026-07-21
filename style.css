@@ -1544,3 +1544,50 @@ body {
 .perf-item.perf-item-suggestion {
   border-left: 3px solid var(--accent-primary);
 }
+
+.perf-section-note {
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+}
+
+.perf-item-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.15rem;
+}
+
+.perf-item-meta {
+  color: var(--text-muted);
+  font-size: 0.76rem;
+}
+
+.perf-tier-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.perf-tier-badge.perf-tier-high {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.perf-tier-badge.perf-tier-medium {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.perf-tier-badge.perf-tier-low {
+  background: var(--bg-tertiary, var(--bg-secondary));
+  color: var(--text-muted);
+}

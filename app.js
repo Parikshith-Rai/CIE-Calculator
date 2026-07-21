@@ -1053,20 +1053,35 @@ function renderPerformanceInsights() {
   }
 
   // Build a per-course performance snapshot
+  const SAFE_TARGET_POINTS = 6; // treat a "B" grade as the safe baseline
+  const INELIGIBLE_BASE_DEFICIT = 10; // ineligible always outranks any eligible weak grade
+
   const snapshots = courses.map(course => {
     const cie = calculateCourseCIE(course);
     const eligible = cie >= 20;
+    const credits = parseInt(course.credits) || 0;
     const predictedSEE = course.seePredicted !== undefined ? course.seePredicted : 80;
     const finalScore = eligible ? Math.min(100, Math.round(cie + (predictedSEE / 2))) : null;
     const gradeObj = eligible ? getGradePoints(finalScore) : { grade: 'F', points: 0, class: 'g-f' };
+
+    // How far this subject is from a "safe" grade, independent of credits
+    const deficit = eligible
+      ? Math.max(0, SAFE_TARGET_POINTS - gradeObj.points)
+      : INELIGIBLE_BASE_DEFICIT + Math.max(0, 20 - cie);
+
+    // Credit-weighted urgency: a 4-credit near-fail hurts SGPA far more than a 1-credit one
+    const impact = parseFloat((deficit * Math.max(credits, 1)).toFixed(1));
+
     return {
       name: course.name || 'Untitled Course',
-      credits: parseInt(course.credits) || 0,
+      credits,
       cie,
       eligible,
       finalScore,
       grade: gradeObj.grade,
-      points: gradeObj.points
+      points: gradeObj.points,
+      deficit,
+      impact
     };
   });
 
@@ -1078,13 +1093,28 @@ function renderPerformanceInsights() {
   // Classify subjects
   const focusSubjects = snapshots
     .filter(c => !c.eligible || c.points <= 4)
-    .sort((a, b) => a.points - b.points || a.cie - b.cie);
+    .sort((a, b) => b.impact - a.impact || a.cie - b.cie);
   const watchSubjects = snapshots
     .filter(c => c.eligible && c.points === 5)
-    .sort((a, b) => a.cie - b.cie);
+    .sort((a, b) => b.impact - a.impact || a.cie - b.cie);
   const goodSubjects = snapshots
     .filter(c => c.eligible && c.points >= 8)
     .sort((a, b) => b.points - a.points);
+
+  // Priority tier for "Needs Focus" items, based on credit-weighted impact
+  // relative to the other flagged subjects (not a fixed number, so it scales
+  // whether someone has one struggling course or five).
+  const focusImpacts = focusSubjects.map(c => c.impact);
+  const maxImpact = focusImpacts.length ? Math.max(...focusImpacts) : 0;
+  const minImpact = focusImpacts.length ? Math.min(...focusImpacts) : 0;
+  const impactRange = Math.max(maxImpact - minImpact, 0.0001);
+
+  function priorityTierFor(impact) {
+    const relative = (impact - minImpact) / impactRange; // 0 (least urgent) to 1 (most urgent)
+    if (focusSubjects.length <= 1 || relative >= 0.66) return { label: 'High Priority', class: 'perf-tier-high' };
+    if (relative >= 0.33) return { label: 'Medium Priority', class: 'perf-tier-medium' };
+    return { label: 'Lower Priority', class: 'perf-tier-low' };
+  }
 
   // Overall summary banner
   const ineligibleCount = snapshots.filter(c => !c.eligible).length;
@@ -1120,12 +1150,20 @@ function renderPerformanceInsights() {
   `;
 
   if (focusSubjects.length > 0) {
-    html += `<div class="perf-section-label">Needs Focus</div><div class="perf-list">`;
+    html += `<div class="perf-section-label">Needs Focus <span class="perf-section-note">— ranked by credit-weighted impact on SGPA</span></div><div class="perf-list">`;
     focusSubjects.slice(0, 4).forEach(c => {
       const reason = !c.eligible
         ? `CIE is ${c.cie}/50 — below the 20-mark cutoff to sit for the SEE.`
         : `Trending towards a ${c.grade} grade (${c.points} pts) — needs stronger SEE prep.`;
-      html += `<div class="perf-item perf-item-focus"><span class="perf-item-icon">🔻</span><div><strong>${c.name}</strong> — ${reason}</div></div>`;
+      const tier = priorityTierFor(c.impact);
+      const creditLabel = `${c.credits} credit${c.credits !== 1 ? 's' : ''}`;
+      html += `<div class="perf-item perf-item-focus">
+        <span class="perf-item-icon">🔻</span>
+        <div>
+          <div class="perf-item-heading"><strong>${c.name}</strong> <span class="perf-tier-badge ${tier.class}">${tier.label}</span></div>
+          ${reason} <span class="perf-item-meta">(${creditLabel} — higher credits mean this weighs more on your SGPA)</span>
+        </div>
+      </div>`;
     });
     html += `</div>`;
   }
@@ -1133,7 +1171,8 @@ function renderPerformanceInsights() {
   if (watchSubjects.length > 0) {
     html += `<div class="perf-section-label">Keep an Eye On</div><div class="perf-list">`;
     watchSubjects.slice(0, 3).forEach(c => {
-      html += `<div class="perf-item perf-item-watch"><span class="perf-item-icon">🟡</span><div><strong>${c.name}</strong> — Currently tracking a C grade. A stronger SEE attempt can lift this to a B or higher.</div></div>`;
+      const creditLabel = `${c.credits} credit${c.credits !== 1 ? 's' : ''}`;
+      html += `<div class="perf-item perf-item-watch"><span class="perf-item-icon">🟡</span><div><strong>${c.name}</strong> — Currently tracking a C grade. A stronger SEE attempt can lift this to a B or higher. <span class="perf-item-meta">(${creditLabel})</span></div></div>`;
     });
     html += `</div>`;
   }
@@ -1149,7 +1188,9 @@ function renderPerformanceInsights() {
   // Suggestions
   const suggestions = [];
   if (focusSubjects.length > 0) {
-    suggestions.push(`Prioritize revision time for <strong>${focusSubjects[0].name}</strong> first — it's currently your weakest link.`);
+    const top = focusSubjects[0];
+    const creditNote = top.credits >= 3 ? ` — a ${top.credits}-credit course, so it moves your SGPA the most` : '';
+    suggestions.push(`Prioritize revision time for <strong>${top.name}</strong> first — it's your highest credit-weighted priority right now${creditNote}.`);
   }
   if (avgCie < 35) {
     suggestions.push(`Your average CIE is <strong>${avgCie.toFixed(1)}/50</strong>. Since Learning Assignments and MSEs are already locked in, put your SEE prep time toward the topics most tested in mid-sems.`);
