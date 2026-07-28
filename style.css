@@ -28,6 +28,25 @@
   --color-danger: hsl(347, 77%, 45%);
   --color-danger-bg: hsla(347, 77%, 45%, 0.1);
 
+  /* Grade scale (O -> F), shared by the guidelines table, grade pills,
+     and the performance section so grade colors stay consistent everywhere */
+  --grade-o: hsl(142, 76%, 36%);
+  --grade-o-bg: hsla(142, 76%, 36%, 0.12);
+  --grade-ap: hsl(160, 70%, 38%);
+  --grade-ap-bg: hsla(160, 70%, 38%, 0.12);
+  --grade-a: hsl(199, 80%, 45%);
+  --grade-a-bg: hsla(199, 80%, 45%, 0.12);
+  --grade-bp: hsl(217, 75%, 50%);
+  --grade-bp-bg: hsla(217, 75%, 50%, 0.12);
+  --grade-b: hsl(258, 55%, 55%);
+  --grade-b-bg: hsla(258, 55%, 55%, 0.12);
+  --grade-c: hsl(38, 92%, 45%);
+  --grade-c-bg: hsla(38, 92%, 45%, 0.12);
+  --grade-p: hsl(25, 90%, 48%);
+  --grade-p-bg: hsla(25, 90%, 48%, 0.12);
+  --grade-f: hsl(347, 77%, 45%);
+  --grade-f-bg: hsla(347, 77%, 45%, 0.12);
+
   --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.05);
   --shadow-lg: 0 16px 32px rgba(0, 0, 0, 0.08);
@@ -60,6 +79,24 @@
   --color-warning-bg: hsla(38, 90%, 55%, 0.12);
   --color-danger: hsl(347, 85%, 60%);
   --color-danger-bg: hsla(347, 85%, 60%, 0.12);
+
+  /* Grade scale (O -> F) — brighter/higher-contrast for dark backgrounds */
+  --grade-o: hsl(142, 70%, 48%);
+  --grade-o-bg: hsla(142, 70%, 48%, 0.16);
+  --grade-ap: hsl(160, 65%, 50%);
+  --grade-ap-bg: hsla(160, 65%, 50%, 0.16);
+  --grade-a: hsl(199, 85%, 60%);
+  --grade-a-bg: hsla(199, 85%, 60%, 0.16);
+  --grade-bp: hsl(217, 85%, 65%);
+  --grade-bp-bg: hsla(217, 85%, 65%, 0.16);
+  --grade-b: hsl(258, 70%, 68%);
+  --grade-b-bg: hsla(258, 70%, 68%, 0.16);
+  --grade-c: hsl(38, 90%, 58%);
+  --grade-c-bg: hsla(38, 90%, 58%, 0.16);
+  --grade-p: hsl(25, 90%, 60%);
+  --grade-p-bg: hsla(25, 90%, 60%, 0.16);
+  --grade-f: hsl(347, 85%, 62%);
+  --grade-f-bg: hsla(347, 85%, 62%, 0.16);
 
   --shadow-sm: 0 1px 4px rgba(0, 0, 0, 0.2);
   --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
@@ -1146,9 +1183,37 @@ body {
   border-bottom: 1px solid var(--card-border);
 }
 
-.grades-table tr.g-o { color: var(--color-success); font-weight: 600; }
-.grades-table tr.g-ap { font-weight: 600; }
-.grades-table tr.g-f { color: var(--color-danger); font-weight: 600; }
+.grades-table tr.g-o  { background: var(--grade-o-bg);  color: var(--grade-o);  font-weight: 600; }
+.grades-table tr.g-ap { background: var(--grade-ap-bg); color: var(--grade-ap); font-weight: 600; }
+.grades-table tr.g-a  { background: var(--grade-a-bg);  color: var(--grade-a);  font-weight: 600; }
+.grades-table tr.g-bp { background: var(--grade-bp-bg); color: var(--grade-bp); font-weight: 600; }
+.grades-table tr.g-b  { background: var(--grade-b-bg);  color: var(--grade-b);  font-weight: 600; }
+.grades-table tr.g-c  { background: var(--grade-c-bg);  color: var(--grade-c);  font-weight: 600; }
+.grades-table tr.g-p  { background: var(--grade-p-bg);  color: var(--grade-p);  font-weight: 600; }
+.grades-table tr.g-f  { background: var(--grade-f-bg);  color: var(--grade-f);  font-weight: 600; }
+
+/* Reusable grade pill — same palette as the guidelines table above,
+   used anywhere a letter grade is called out inline (e.g. performance insights) */
+.grade-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.06rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.grade-pill.g-o  { background: var(--grade-o-bg);  color: var(--grade-o); }
+.grade-pill.g-ap { background: var(--grade-ap-bg); color: var(--grade-ap); }
+.grade-pill.g-a  { background: var(--grade-a-bg);  color: var(--grade-a); }
+.grade-pill.g-bp { background: var(--grade-bp-bg); color: var(--grade-bp); }
+.grade-pill.g-b  { background: var(--grade-b-bg);  color: var(--grade-b); }
+.grade-pill.g-c  { background: var(--grade-c-bg);  color: var(--grade-c); }
+.grade-pill.g-p  { background: var(--grade-p-bg);  color: var(--grade-p); }
+.grade-pill.g-f  { background: var(--grade-f-bg);  color: var(--grade-f); }
 
 /* Toast Notifications */
 .toast-container {

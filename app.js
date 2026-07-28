@@ -1183,6 +1183,7 @@ function renderPerformanceInsights() {
       eligible,
       finalScore,
       grade: gradeObj.grade,
+      gradeClass: gradeObj.class || 'g-f',
       points: gradeObj.points,
       deficit,
       impact
@@ -1256,15 +1257,20 @@ function renderPerformanceInsights() {
   if (focusSubjects.length > 0) {
     html += `<div class="perf-section-label">Needs Focus <span class="perf-section-note">— ranked by credit-weighted impact on SGPA</span></div><div class="perf-list">`;
     focusSubjects.slice(0, 4).forEach(c => {
+      const gradePill = `<span class="grade-pill ${c.gradeClass}">${c.grade}</span>`;
       const reason = !c.eligible
         ? `CIE is ${c.cie}/50 — below the 20-mark cutoff to sit for the SEE.`
-        : `Trending towards a ${c.grade} grade (${c.points} pts) — needs stronger SEE prep.`;
+        : `Trending towards this grade (${c.points} pts) — needs stronger SEE prep.`;
       const tier = priorityTierFor(c.impact);
       const creditLabel = `${c.credits} credit${c.credits !== 1 ? 's' : ''}`;
       html += `<div class="perf-item perf-item-focus">
         <span class="perf-item-icon">🔻</span>
         <div>
-          <div class="perf-item-heading"><strong>${c.name}</strong> <span class="perf-tier-badge ${tier.class}">${tier.label}</span></div>
+          <div class="perf-item-heading">
+            <strong>${c.name}</strong>
+            ${c.eligible ? gradePill : ''}
+            <span class="perf-tier-badge ${tier.class}">${tier.label}</span>
+          </div>
           ${reason} <span class="perf-item-meta">(${creditLabel} — higher credits mean this weighs more on your SGPA)</span>
         </div>
       </div>`;
@@ -1276,7 +1282,14 @@ function renderPerformanceInsights() {
     html += `<div class="perf-section-label">Keep an Eye On</div><div class="perf-list">`;
     watchSubjects.slice(0, 3).forEach(c => {
       const creditLabel = `${c.credits} credit${c.credits !== 1 ? 's' : ''}`;
-      html += `<div class="perf-item perf-item-watch"><span class="perf-item-icon">🟡</span><div><strong>${c.name}</strong> — Currently tracking a C grade. A stronger SEE attempt can lift this to a B or higher. <span class="perf-item-meta">(${creditLabel})</span></div></div>`;
+      const gradePill = `<span class="grade-pill ${c.gradeClass}">${c.grade}</span>`;
+      html += `<div class="perf-item perf-item-watch">
+        <span class="perf-item-icon">🟡</span>
+        <div>
+          <div class="perf-item-heading"><strong>${c.name}</strong> ${gradePill}</div>
+          Currently tracking this grade. A stronger SEE attempt can lift it to a B or higher. <span class="perf-item-meta">(${creditLabel})</span>
+        </div>
+      </div>`;
     });
     html += `</div>`;
   }
@@ -1284,7 +1297,14 @@ function renderPerformanceInsights() {
   if (goodSubjects.length > 0) {
     html += `<div class="perf-section-label">Doing Well</div><div class="perf-list">`;
     goodSubjects.slice(0, 3).forEach(c => {
-      html += `<div class="perf-item perf-item-good"><span class="perf-item-icon">✅</span><div><strong>${c.name}</strong> — On track for a ${c.grade} grade. Great consistency, keep it up.</div></div>`;
+      const gradePill = `<span class="grade-pill ${c.gradeClass}">${c.grade}</span>`;
+      html += `<div class="perf-item perf-item-good">
+        <span class="perf-item-icon">✅</span>
+        <div>
+          <div class="perf-item-heading"><strong>${c.name}</strong> ${gradePill}</div>
+          On track for this grade. Great consistency, keep it up.
+        </div>
+      </div>`;
     });
     html += `</div>`;
   }
