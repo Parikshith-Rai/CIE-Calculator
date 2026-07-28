@@ -5,8 +5,14 @@
 // --- STATE MANAGEMENT ---
 let courses = [];
 let savedSemesters = [];
-let _deletedCourseBackup = null;
 let _deleteCourseUndoTimer = null;
+let _undoTimer = null;
+
+// --- UNDO / REDO HISTORY ---
+let undoStack = [];
+let redoStack = [];
+const MAX_UNDO_HISTORY = 40;
+let _pendingEditSnapshot = null; // captured on focus, committed on blur if value actually changed
 const DEFAULT_THEME = 'dark';
 const SAVED_SEMESTERS_KEY = 'nmit_saved_semesters';
 
@@ -65,6 +71,8 @@ const savedSemestersList = document.getElementById('saved-semesters-list');
 const btnCompareSemesters = document.getElementById('btn-compare-semesters');
 const performanceContent = document.getElementById('performance-content');
 const performanceTag = document.getElementById('performance-tag');
+const btnUndo = document.getElementById('btn-undo');
+const btnRedo = document.getElementById('btn-redo');
 const comparisonModal = document.getElementById('comparison-modal');
 const btnCloseCompare = document.getElementById('btn-close-compare');
 const comparisonTbody = document.getElementById('comparison-tbody');
@@ -207,6 +215,26 @@ document.addEventListener('DOMContentLoaded', () => {
   initFontSize();
   loadState();
   renderApp();
+  updateUndoRedoButtons();
+
+  // Undo / Redo controls
+  if (btnUndo) btnUndo.addEventListener('click', () => performUndo());
+  if (btnRedo) btnRedo.addEventListener('click', () => performRedo());
+
+  document.addEventListener('keydown', (e) => {
+    const key = e.key.toLowerCase();
+    const isMac = navigator.platform.toUpperCase().includes('MAC');
+    const modKey = isMac ? e.metaKey : e.ctrlKey;
+    if (!modKey || key !== 'z' && key !== 'y') return;
+
+    if (key === 'z' && !e.shiftKey) {
+      e.preventDefault();
+      performUndo();
+    } else if ((key === 'z' && e.shiftKey) || key === 'y') {
+      e.preventDefault();
+      performRedo();
+    }
+  });
   
   // Font Size controls
   btnFontDec.addEventListener('click', () => changeFontSize(-10));
@@ -469,6 +497,74 @@ function loadState() {
       cieGuidelines = { ...DEFAULT_CIE_GUIDELINES };
     }
   }
+}
+
+// --- UNDO / REDO ---
+function snapshotCourses() {
+  return JSON.parse(JSON.stringify(courses));
+}
+
+// Call before a discrete, one-shot mutation (add/delete/duplicate/preset/etc.)
+// Pushes the pre-change state so it can be restored later.
+function pushUndoSnapshot(beforeSnapshot) {
+  undoStack.push(beforeSnapshot);
+  if (undoStack.length > MAX_UNDO_HISTORY) undoStack.shift();
+  redoStack = [];
+  updateUndoRedoButtons();
+}
+
+// Call on focus of an editable field, to capture the "before" state
+// of a typing session without spamming the undo stack every keystroke.
+function beginEditSnapshot() {
+  if (_pendingEditSnapshot === null) {
+    _pendingEditSnapshot = snapshotCourses();
+  }
+}
+
+// Call on blur — only commits an undo point if the value actually changed.
+function commitEditSnapshot() {
+  if (_pendingEditSnapshot === null) return;
+  const before = _pendingEditSnapshot;
+  _pendingEditSnapshot = null;
+  if (JSON.stringify(before) !== JSON.stringify(courses)) {
+    pushUndoSnapshot(before);
+  }
+}
+
+function performUndo(toastMessage) {
+  // If the user is mid-edit in a field, commit that as an undo point first
+  // so nothing typed gets silently lost.
+  commitEditSnapshot();
+  if (undoStack.length === 0) return;
+
+  const prev = undoStack.pop();
+  redoStack.push(snapshotCourses());
+  if (redoStack.length > MAX_UNDO_HISTORY) redoStack.shift();
+
+  courses = prev;
+  saveState();
+  renderApp();
+  updateUndoRedoButtons();
+  showToast(toastMessage || 'Undid last change', 'success');
+}
+
+function performRedo() {
+  if (redoStack.length === 0) return;
+
+  const next = redoStack.pop();
+  undoStack.push(snapshotCourses());
+  if (undoStack.length > MAX_UNDO_HISTORY) undoStack.shift();
+
+  courses = next;
+  saveState();
+  renderApp();
+  updateUndoRedoButtons();
+  showToast('Redid change', 'success');
+}
+
+function updateUndoRedoButtons() {
+  if (btnUndo) btnUndo.disabled = undoStack.length === 0;
+  if (btnRedo) btnRedo.disabled = redoStack.length === 0;
 }
 
 // --- CALCULATION HELPER FUNCTIONS ---
@@ -765,6 +861,8 @@ function bindCardEvents(cardElement, courseId) {
   
   // Name input
   const nameInput = cardElement.querySelector('.input-course-name');
+  nameInput.addEventListener('focus', beginEditSnapshot);
+  nameInput.addEventListener('blur', commitEditSnapshot);
   nameInput.addEventListener('input', (e) => {
     course.name = e.target.value;
     saveState();
@@ -773,6 +871,8 @@ function bindCardEvents(cardElement, courseId) {
   
   // Credits input
   const creditsInput = cardElement.querySelector('.input-credits');
+  creditsInput.addEventListener('focus', beginEditSnapshot);
+  creditsInput.addEventListener('blur', commitEditSnapshot);
   creditsInput.addEventListener('input', (e) => {
     let val = parseInt(e.target.value) || 1;
     if (val < 1) val = 1;
@@ -785,6 +885,8 @@ function bindCardEvents(cardElement, courseId) {
   // Numerical marks inputs
   const markInputs = cardElement.querySelectorAll('.input-mark');
   markInputs.forEach(input => {
+    input.addEventListener('focus', beginEditSnapshot);
+    input.addEventListener('blur', commitEditSnapshot);
     input.addEventListener('input', (e) => {
       const inputEl = e.target;
       let val = parseFloat(inputEl.value);
@@ -1002,7 +1104,9 @@ function updateSidebarSgpaList() {
     // Bind select change
     const select = item.querySelector('.sgpa-item-grade-select');
     select.addEventListener('change', (e) => {
+      const before = snapshotCourses();
       course.seePredicted = parseInt(e.target.value);
+      pushUndoSnapshot(before);
       saveState();
       calculateSGPA();
       renderPerformanceInsights();
@@ -1239,6 +1343,7 @@ function renderPerformanceInsights() {
 
 // --- COURSE OPERATIONS ---
 function addCourse(type) {
+  const before = snapshotCourses();
   const typeLabel = type === 'non-integrated' ? 'Theory' : type === 'lab' ? 'Lab' : 'Integrated';
   const newCourse = {
     id: 'course_' + Date.now(),
@@ -1256,6 +1361,7 @@ function addCourse(type) {
   };
   
   courses.push(newCourse);
+  pushUndoSnapshot(before);
   saveState();
   renderApp();
   showToast(`Added new ${typeLabel} course`, 'success');
@@ -1265,6 +1371,7 @@ function duplicateCourse(id) {
   const index = courses.findIndex(c => c.id === id);
   if (index === -1) return;
   
+  const before = snapshotCourses();
   const original = courses[index];
   const copy = {
     ...original,
@@ -1273,6 +1380,7 @@ function duplicateCourse(id) {
   };
   
   courses.splice(index + 1, 0, copy);
+  pushUndoSnapshot(before);
   saveState();
   renderApp();
   showToast(`Duplicated "${original.name}"`, 'success');
@@ -1282,6 +1390,7 @@ function switchCourseType(id, newType) {
   const course = courses.find(c => c.id === id);
   if (!course || course.type === newType) return;
 
+  const before = snapshotCourses();
   course.type = newType;
 
   // Reset fields that don't apply to new type
@@ -1307,6 +1416,7 @@ function switchCourseType(id, newType) {
     course.finalLab = course.finalLab || 0;
   }
 
+  pushUndoSnapshot(before);
   saveState();
   renderApp();
   const typeLabel = newType === 'integrated' ? 'Integrated' : newType === 'lab' ? 'Lab-Only' : 'Non-Integrated';
@@ -1317,10 +1427,11 @@ function deleteCourse(id) {
   const index = courses.findIndex(c => c.id === id);
   if (index === -1) return;
   
+  const before = snapshotCourses();
   const deletedCourse = courses[index];
-  _deletedCourseBackup = { course: JSON.parse(JSON.stringify(deletedCourse)), index: index };
   
   courses.splice(index, 1);
+  pushUndoSnapshot(before);
   saveState();
   renderApp();
   showUndoDeleteToast(`Deleted "${deletedCourse.name}"`);
@@ -1338,11 +1449,13 @@ function loadPreset(branch, semester) {
     return;
   }
   
+  const before = snapshotCourses();
   courses = preset.map((c, i) => ({
     ...c,
     id: `preset_${branch}_${semester}_${i}_${Date.now()}`
   }));
   
+  pushUndoSnapshot(before);
   saveState();
   renderApp();
   
@@ -1354,7 +1467,9 @@ function loadPreset(branch, semester) {
 
 function clearAllCourses() {
   if (courses.length === 0) return;
+  const before = snapshotCourses();
   courses = [];
+  pushUndoSnapshot(before);
   saveState();
   renderApp();
   showToast('Cleared all courses', 'danger');
@@ -1608,17 +1723,16 @@ function loadSavedSemester(id) {
   const sem = savedSemesters.find(s => s.id === id);
   if (!sem) return;
   
-  // Backup current for undo before overwriting
-  if (courses.length > 0) {
-    _deletedCoursesBackup = JSON.parse(JSON.stringify(courses));
-  }
+  const hadExistingCourses = courses.length > 0;
+  const before = snapshotCourses();
   
   courses = JSON.parse(JSON.stringify(sem.courses));
+  pushUndoSnapshot(before);
   saveState();
   renderApp();
   
-  // We use the undo logic if they overwrote existing courses
-  if (_deletedCoursesBackup) {
+  // Offer a quick-access undo toast if this overwrote existing courses
+  if (hadExistingCourses) {
     showUndoLoadToast(`Loaded "${sem.name}"`);
   } else {
     showToast(`Loaded "${sem.name}"`, 'success');
@@ -1714,13 +1828,7 @@ function showUndoLoadToast(msg) {
   });
   
   toast.querySelector('#btn-undo-load').addEventListener('click', () => {
-    if (_deletedCoursesBackup) {
-      courses = _deletedCoursesBackup;
-      _deletedCoursesBackup = null;
-      saveState();
-      renderApp();
-      showToast('Courses restored!', 'success');
-    }
+    performUndo('Courses restored!');
     clearTimeout(_undoTimer);
     toast.remove();
   });
@@ -1728,7 +1836,6 @@ function showUndoLoadToast(msg) {
   _undoTimer = setTimeout(() => {
     toast.style.animation = 'slideInLeft 0.35s cubic-bezier(0.16, 1, 0.3, 1) reverse';
     setTimeout(() => toast.remove(), 350);
-    _deletedCoursesBackup = null;
   }, 5000);
 }
 
@@ -1754,15 +1861,7 @@ function showUndoDeleteToast(msg) {
   });
   
   toast.querySelector('#btn-undo-delete').addEventListener('click', () => {
-    if (_deletedCourseBackup) {
-      const { course, index } = _deletedCourseBackup;
-      const insertAt = Math.min(index, courses.length);
-      courses.splice(insertAt, 0, course);
-      _deletedCourseBackup = null;
-      saveState();
-      renderApp();
-      showToast('Course restored!', 'success');
-    }
+    performUndo('Course restored!');
     clearTimeout(_deleteCourseUndoTimer);
     toast.remove();
   });
@@ -1770,7 +1869,6 @@ function showUndoDeleteToast(msg) {
   _deleteCourseUndoTimer = setTimeout(() => {
     toast.style.animation = 'slideInLeft 0.35s cubic-bezier(0.16, 1, 0.3, 1) reverse';
     setTimeout(() => toast.remove(), 350);
-    _deletedCourseBackup = null;
   }, 7000);
 }
 

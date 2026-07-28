@@ -27,6 +27,20 @@
       </div>
       
       <div class="header-actions">
+        <div class="undo-redo-controls" style="display: flex; align-items: center; gap: 0.25rem; margin-right: 0.5rem;">
+          <button id="btn-undo" class="btn-icon" aria-label="Undo last change" title="Undo (Ctrl+Z)" disabled>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 14 4 9 9 4"></polyline>
+              <path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path>
+            </svg>
+          </button>
+          <button id="btn-redo" class="btn-icon" aria-label="Redo last undone change" title="Redo (Ctrl+Shift+Z)" disabled>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 14 20 9 15 4"></polyline>
+              <path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"></path>
+            </svg>
+          </button>
+        </div>
         <div class="font-controls" style="display: flex; align-items: center; gap: 0.25rem; margin-right: 0.5rem;">
           <button id="btn-font-dec" class="btn-icon" aria-label="Decrease font size" style="font-weight: bold; font-size: 0.85rem; padding: 4px;">A-</button>
           <button id="btn-font-reset" class="btn-icon" aria-label="Reset font size" style="font-weight: bold; font-size: 1rem; padding: 4px;">A</button>
