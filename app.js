@@ -595,6 +595,84 @@ function getCIEStatus(cie) {
   return { label: 'Not Eligible', class: 'status-danger' };
 }
 
+// Returns a what-if nudge string when CIE < NUDGE_THRESHOLD, else null.
+// Finds the single component where the fewest extra marks push CIE over the threshold.
+const WHATIF_NUDGE_THRESHOLD = 25; // cushion above the 20 eligibility floor
+function getWhatIfNudge(course, cie) {
+  if (cie >= WHATIF_NUDGE_THRESHOLD) return null;
+  if (course.type === 'lab') return null; // lab-only: viva+finalLab already simple, no nudge needed
+
+  const needed = WHATIF_NUDGE_THRESHOLD - cie; // how many CIE points short
+  const g = cieGuidelines;
+
+  // Each candidate: { label, rawExtraNeeded, feasible }
+  // We compute how many raw marks in that component yield `needed` more CIE points
+  const candidates = [];
+
+  if (course.type === 'non-integrated') {
+    // LA-1 — 1 raw mark = 1 CIE point; max headroom = niLa1Max - current
+    const la1Room = g.niLa1Max - (course.la1 || 0);
+    if (la1Room > 0) {
+      const raw = Math.ceil(needed);
+      if (raw <= la1Room) candidates.push({ label: 'LA-1', rawExtra: raw, unit: 'marks' });
+    }
+    // LA-2
+    const la2Room = g.niLa2Max - (course.la2 || 0);
+    if (la2Room > 0) {
+      const raw = Math.ceil(needed);
+      if (raw <= la2Room) candidates.push({ label: 'LA-2', rawExtra: raw, unit: 'marks' });
+    }
+    // MSE-1 — 1 raw mark = niMseScale CIE points; raw needed = needed / scale
+    const mse1Room = 50 - (course.mse1 || 0);
+    if (mse1Room > 0) {
+      const raw = Math.ceil(needed / g.niMseScale);
+      if (raw <= mse1Room) candidates.push({ label: 'MSE-1', rawExtra: raw, unit: 'marks' });
+    }
+    // MSE-2
+    const mse2Room = 50 - (course.mse2 || 0);
+    if (mse2Room > 0) {
+      const raw = Math.ceil(needed / g.niMseScale);
+      if (raw <= mse2Room) candidates.push({ label: 'MSE-2', rawExtra: raw, unit: 'marks' });
+    }
+  } else {
+    // Integrated: CIE = (theoryPart * inTheoryWt) + (labVal * inPracWt)
+    // Extra CIE from theory components is scaled by inTheoryWt on top of niMseScale
+    const la1Room = g.niLa1Max - (course.la1 || 0);
+    if (la1Room > 0) {
+      const raw = Math.ceil(needed / g.inTheoryWt);
+      if (raw <= la1Room) candidates.push({ label: 'LA-1', rawExtra: raw, unit: 'marks' });
+    }
+    const la2Room = g.niLa2Max - (course.la2 || 0);
+    if (la2Room > 0) {
+      const raw = Math.ceil(needed / g.inTheoryWt);
+      if (raw <= la2Room) candidates.push({ label: 'LA-2', rawExtra: raw, unit: 'marks' });
+    }
+    const mse1Room = 50 - (course.mse1 || 0);
+    if (mse1Room > 0) {
+      const raw = Math.ceil(needed / (g.niMseScale * g.inTheoryWt));
+      if (raw <= mse1Room) candidates.push({ label: 'MSE-1', rawExtra: raw, unit: 'marks' });
+    }
+    const mse2Room = 50 - (course.mse2 || 0);
+    if (mse2Room > 0) {
+      const raw = Math.ceil(needed / (g.niMseScale * g.inTheoryWt));
+      if (raw <= mse2Room) candidates.push({ label: 'MSE-2', rawExtra: raw, unit: 'marks' });
+    }
+    const labRoom = g.inLabMax - (course.lab || 0);
+    if (labRoom > 0) {
+      const raw = Math.ceil(needed / g.inPracWt);
+      if (raw <= labRoom) candidates.push({ label: 'Lab', rawExtra: raw, unit: 'marks' });
+    }
+  }
+
+  if (candidates.length === 0) return null;
+
+  // Pick the one needing the fewest extra raw marks
+  candidates.sort((a, b) => a.rawExtra - b.rawExtra);
+  const best = candidates[0];
+  const projectedCie = Math.min(parseFloat((cie + needed).toFixed(1)), 50);
+  return `+${best.rawExtra} in ${best.label} → CIE ${cie} ▸ ${projectedCie} ✓ cushion`;
+}
+
 // Map marks to NMIT grade point
 function getGradePoints(totalMarks) {
   if (totalMarks >= 90) return { grade: 'O', points: 10, class: 'g-o' };
@@ -803,6 +881,15 @@ function renderCourseBoard() {
     const targetsInfo = getSEETargets(cie);
     let footerHTML = '';
     
+    const nudge = getWhatIfNudge(course, cie);
+    const nudgeHTML = nudge ? `
+      <div class="whatif-nudge">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+        </svg>
+        <span>${nudge}</span>
+      </div>` : '';
+
     if (targetsInfo.possible) {
       // Calculate what raw SEE marks are needed for an O or passing
       const targets = targetsInfo.targets;
@@ -818,30 +905,36 @@ function renderCourseBoard() {
       
       footerHTML = `
         <div class="course-card-footer">
-          <div class="grade-tips-container">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-            </svg>
-            <span>${hintText}</span>
+          ${nudgeHTML}
+          <div class="footer-hints-row">
+            <div class="grade-tips-container">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+              <span>${hintText}</span>
+            </div>
+            <button class="see-targets-badge btn-view-targets">
+              SEE Targets
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
           </div>
-          <button class="see-targets-badge btn-view-targets">
-            SEE Targets
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
-          </button>
         </div>
       `;
     } else {
       footerHTML = `
         <div class="course-card-footer">
-          <div class="grade-tips-container text-danger">
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            <span>You need at least 20 CIE marks to be eligible for SEE.</span>
+          ${nudgeHTML}
+          <div class="footer-hints-row">
+            <div class="grade-tips-container text-danger">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span>You need at least 20 CIE marks to be eligible for SEE.</span>
+            </div>
           </div>
         </div>
       `;
@@ -945,7 +1038,26 @@ function bindCardEvents(cardElement, courseId) {
       // Update footer tips
       const footer = cardElement.querySelector('.course-card-footer');
       if (footer) {
+        // Update what-if nudge
+        let nudgeEl = footer.querySelector('.whatif-nudge');
+        const newNudge = getWhatIfNudge(course, newCie);
+        if (newNudge) {
+          if (!nudgeEl) {
+            nudgeEl = document.createElement('div');
+            nudgeEl.className = 'whatif-nudge';
+            footer.insertBefore(nudgeEl, footer.firstChild);
+          }
+          nudgeEl.innerHTML = `
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+            </svg>
+            <span>${newNudge}</span>`;
+        } else {
+          if (nudgeEl) nudgeEl.remove();
+        }
+
         const targetsInfo = getSEETargets(newCie);
+        const tipsContainer = footer.querySelector('.grade-tips-container');
         if (targetsInfo.possible) {
           const targets = targetsInfo.targets;
           let minPass = targets['P'];
@@ -959,18 +1071,22 @@ function bindCardEvents(cardElement, courseId) {
           } else if (targets['A+'] !== 'Impossible') {
             hintText += ` For A+ Grade: <strong>${targets['A+']}</strong>.`;
           }
-          footer.querySelector('.grade-tips-container').innerHTML = hintHTML + `<span>${hintText}</span>`;
-          footer.querySelector('.grade-tips-container').className = "grade-tips-container";
+          if (tipsContainer) {
+            tipsContainer.innerHTML = hintHTML + `<span>${hintText}</span>`;
+            tipsContainer.className = "grade-tips-container";
+          }
         } else {
-          footer.querySelector('.grade-tips-container').innerHTML = `
-            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="8" x2="12" y2="12"></line>
-              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            </svg>
-            <span>You need at least 20 CIE marks to be eligible for SEE.</span>
-          `;
-          footer.querySelector('.grade-tips-container').className = "grade-tips-container text-danger";
+          if (tipsContainer) {
+            tipsContainer.innerHTML = `
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span>You need at least 20 CIE marks to be eligible for SEE.</span>
+            `;
+            tipsContainer.className = "grade-tips-container text-danger";
+          }
         }
       }
       

@@ -962,9 +962,45 @@ body {
   padding-top: 1rem;
   border-top: 1px solid var(--card-border);
   display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.footer-hints-row {
+  display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 1.5rem;
+}
+
+/* What-if nudge pill */
+.whatif-nudge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: hsl(38, 85%, 38%);
+  background: hsla(38, 92%, 50%, 0.1);
+  border: 1px solid hsla(38, 92%, 50%, 0.28);
+  border-radius: var(--radius-sm);
+  padding: 0.3rem 0.65rem;
+  width: fit-content;
+  line-height: 1.3;
+  letter-spacing: 0.01em;
+}
+
+[data-theme="dark"] .whatif-nudge {
+  color: hsl(38, 95%, 68%);
+  background: hsla(38, 92%, 50%, 0.12);
+  border-color: hsla(38, 92%, 50%, 0.3);
+}
+
+.whatif-nudge svg {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  stroke: currentColor;
 }
 
 .grade-tips-container {
