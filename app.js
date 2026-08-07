@@ -189,11 +189,28 @@ const PRESETS = {
     "1": _itSem1(),
     "2": _itSem2(),
     "3": [
-      { name: "Discrete Mathematical Structures", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 88 },
-      { name: "Data Structures & Applications", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 82 },
-      { name: "Computer Organization & Arch.", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 72 },
-      { name: "Analog & Digital Electronics", type: "integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 68 },
-      { name: "Object Oriented Programming", type: "integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 }
+      // 25MAT204 — 3-1-0, non-integrated
+      { name: "Discrete Mathematical Structures",       type: "non-integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      // 25CSE201 — 2-0-2, integrated (has DSA lab)
+      { name: "Data Structures",                        type: "integrated",     credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      // 25CSE202 — 2-0-2, integrated (has OOP lab)
+      { name: "Object Oriented Programming",            type: "integrated",     credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      // 25CSE211 — 3-0-0, non-integrated
+      { name: "Computer Architecture and Organization", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      // 25ISE111 — 3-0-0, non-integrated
+      { name: "Software Engineering and Applications",  type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      // 25CSE221 — 0-0-2, lab-only (R Programming Lab, no SEE)
+      { name: "Data Analysis Using R Programming Lab",  type: "lab",            credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, viva: 0, finalLab: 0, seePredicted: 0 },
+      // 25HSS134 — Kannada/Samskrithika
+      { name: "Kannada (Balake / Samskrithika)",        type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      // 25HSS104 — Augmenting Employability Skills (no SEE)
+      { name: "Augmenting Employability Skills",        type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 },
+      // 25HSS105 — Fundamentals of Calculus
+      { name: "Fundamentals of Calculus",               type: "non-integrated", credits: 2, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      // CDC — Aptitude Training (no SEE)
+      { name: "Aptitude Training (CDC)",                type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 },
+      // PPL — Placement Practice Lab (lab-only, no SEE)
+      { name: "Placement Practice Lab (PPL)",           type: "lab",            credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, viva: 0, finalLab: 0, seePredicted: 0 }
     ]
   },
   CSBS: { "1": _itSem1(), "2": _itSem2() },
