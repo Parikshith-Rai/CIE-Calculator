@@ -410,6 +410,30 @@ document.addEventListener('DOMContentLoaded', () => {
   // PDF Export
   btnExportPdf.addEventListener('click', () => exportPDF());
 
+  // Share Card
+  const btnShareCard       = document.getElementById('btn-share-card');
+  const shareCardModal     = document.getElementById('share-card-modal');
+  const btnCloseShareModal  = document.getElementById('btn-close-share-modal');
+  const btnCloseShareModal2 = document.getElementById('btn-close-share-modal-2');
+  const btnDownloadCard    = document.getElementById('btn-download-card');
+
+  if (btnShareCard) {
+    btnShareCard.addEventListener('click', () => {
+      openShareCard();
+      shareCardModal.showModal();
+    });
+  }
+  if (btnCloseShareModal)  btnCloseShareModal.addEventListener('click',  () => shareCardModal.close());
+  if (btnCloseShareModal2) btnCloseShareModal2.addEventListener('click', () => shareCardModal.close());
+  if (shareCardModal) {
+    shareCardModal.addEventListener('click', (e) => {
+      if (e.target === shareCardModal) shareCardModal.close();
+    });
+  }
+  if (btnDownloadCard) {
+    btnDownloadCard.addEventListener('click', downloadShareCard);
+  }
+
 });
 
 
@@ -2104,5 +2128,114 @@ function showDetailedTargetsToast(course) {
   
   container.addEventListener('click', (e) => {
     if (e.target === container) container.remove();
+  });
+}
+// --- SHARE RESULT CARD ---
+
+function openShareCard() {
+  if (!courses.length) {
+    showToast('Add some courses first!', 'warning');
+    return;
+  }
+
+  // Meta line
+  const metaEl = document.getElementById('share-card-meta');
+  const branchEl  = document.getElementById('preset-branch');
+  const semEl     = document.getElementById('preset-semester');
+  const branchVal = branchEl  ? branchEl.value  : '';
+  const semVal    = semEl     ? semEl.value      : '';
+  if (metaEl) {
+    const parts = [];
+    if (semVal)    parts.push('Sem ' + semVal);
+    if (branchVal) parts.push(branchVal);
+    metaEl.textContent = parts.length ? parts.join(' · ') : 'NMIT';
+    // Add generation date
+    metaEl.textContent += '\n' + new Date().toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+  }
+
+  // Course rows
+  const container = document.getElementById('share-card-courses');
+  container.innerHTML = '';
+  courses.forEach(course => {
+    const cie = calculateCourseCIE(course);
+    const status = getCIEStatus(cie);
+
+    const row = document.createElement('div');
+    row.className = 'share-card-row';
+
+    const badgeClass = status.class === 'status-good' ? 'good'
+                     : status.class === 'status-warning' ? 'warning' : 'danger';
+
+    row.innerHTML = `
+      <span class="share-card-course-name" title="${course.name}">${course.name}</span>
+      <span class="share-card-cie">${cie} <span style="font-size:0.65rem;color:#64748b;font-weight:400;">/ 50</span></span>
+      <span class="share-card-badge ${badgeClass}">${status.label}</span>
+    `;
+    container.appendChild(row);
+  });
+
+  // Footer stats
+  let totalCie = 0, totalCredits = 0, totalGP = 0, gpCredits = 0, eligibleCount = 0;
+  courses.forEach(c => {
+    const cie = calculateCourseCIE(c);
+    totalCie += cie;
+    totalCredits += parseInt(c.credits) || 0;
+    const eligible = cie >= 20;
+    if (eligible) eligibleCount++;
+    const predicted = c.seePredicted !== undefined ? c.seePredicted : 80;
+    const finalScore = Math.min(100, Math.round(cie + predicted / 2));
+    const gradeObj = eligible ? getGradePoints(finalScore) : { points: 0 };
+    const cr = parseInt(c.credits) || 0;
+    totalGP += gradeObj.points * cr;
+    gpCredits += cr;
+  });
+
+  const avgCie  = courses.length ? (totalCie / courses.length).toFixed(1) : '--';
+  const sgpa    = gpCredits ? (totalGP / gpCredits).toFixed(2) : '--';
+  const eligPct = courses.length ? Math.round(eligibleCount / courses.length * 100) : 0;
+
+  const footerEl = document.getElementById('share-card-footer');
+  footerEl.innerHTML = `
+    <div class="share-card-stat">
+      <div class="share-card-stat-value">${avgCie}</div>
+      <div class="share-card-stat-label">Avg CIE</div>
+    </div>
+    <div class="share-card-stat">
+      <div class="share-card-stat-value">${sgpa}</div>
+      <div class="share-card-stat-label">Est. SGPA</div>
+    </div>
+    <div class="share-card-stat">
+      <div class="share-card-stat-value">${eligPct}%</div>
+      <div class="share-card-stat-label">Eligible</div>
+    </div>
+  `;
+}
+
+function downloadShareCard() {
+  const card = document.getElementById('share-card');
+  if (!card) return;
+
+  const btn = document.getElementById('btn-download-card');
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span style="opacity:0.7">Generating…</span>';
+
+  html2canvas(card, {
+    backgroundColor: null,
+    scale: 2,           // 2× for crisp display on phones
+    useCORS: true,
+    logging: false
+  }).then(canvas => {
+    const link = document.createElement('a');
+    link.download = 'nmit-cie-result.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+    btn.disabled = false;
+    btn.innerHTML = orig;
+    showToast('Image downloaded!', 'success');
+  }).catch(() => {
+    btn.disabled = false;
+    btn.innerHTML = orig;
+    showToast('Could not generate image', 'error');
   });
 }
