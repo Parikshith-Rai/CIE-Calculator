@@ -214,7 +214,32 @@ const PRESETS = {
     ]
   },
   CSBS: { "1": _itSem1(), "2": _itSem2() },
-  ISE:  { "1": _itSem1(), "2": _itSem2() },
+  ISE:  {
+    "1": _itSem1(),
+    "2": _itSem2(),
+    "3": [
+      // 25MAT204 — 3-1-0, non-integrated
+      { name: "Discrete Mathematical Structures",       type: "non-integrated", credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      // 25CSE201 — 2-0-2, integrated (has DS lab)
+      { name: "Data Structures",                        type: "integrated",     credits: 4, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      // 25CSE202 — 2-0-2, integrated (has OOP lab)
+      { name: "Object-Oriented Programming",            type: "integrated",     credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      // 25CSE211 — 3-0-0, non-integrated
+      { name: "Computer Architecture and Organization", type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      // 25AID111 — 3-0-0, non-integrated
+      { name: "Essentials of Data Science",             type: "non-integrated", credits: 3, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      // 25CCE122 — 0-0-2, lab-only (Unix and Shell Programming)
+      { name: "Unix and Shell Programming",             type: "lab",            credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, viva: 0, finalLab: 0, seePredicted: 0 },
+      // 25HSS103 — Gender, Diversity & Inclusion (no SEE)
+      { name: "Gender, Diversity & Inclusion",          type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 },
+      // 25HSS134 — Augmenting Employability Skills (no SEE)
+      { name: "Augmenting Employability Skills",        type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 },
+      // 25HSS105 — Kannada (Balake/Samskrithika)
+      { name: "Kannada (Balake / Samskrithika)",        type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 80 },
+      // 25APT301 — Aptitude Training (CDC, no SEE)
+      { name: "Aptitude Training (CDC)",                type: "non-integrated", credits: 1, la1: 0, la2: 0, mse1: 0, mse2: 0, lab: 0, seePredicted: 0 }
+    ]
+  },
   AIDS: { "1": _itSem1(), "2": _itSem2() },
   AIML: { "1": _itSem1(), "2": _itSem2() },
   RAI:  { "1": _nonItSem1(), "2": _itSem2() },
