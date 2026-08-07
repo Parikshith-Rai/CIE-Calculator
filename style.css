@@ -1492,56 +1492,7 @@ body {
 /* ==========================================================================
    TOTAL USERS BADGE
    ========================================================================== */
-.user-count-badge {
-  position: fixed;
-  bottom: 1rem;
-  right: 1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  padding: 0.4rem 0.7rem;
-  background: var(--card-bg);
-  border: 1px solid var(--card-border);
-  border-radius: 999px;
-  box-shadow: var(--shadow-md);
-  color: var(--text-secondary);
-  font-family: var(--font-sans);
-  font-size: 0.75rem;
-  font-weight: 500;
-  z-index: 40;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  opacity: 0.9;
-  transition: opacity var(--transition-fast), transform var(--transition-fast);
-  pointer-events: none;
-  user-select: none;
-}
 
-.user-count-badge:hover {
-  opacity: 1;
-}
-
-.user-count-badge svg {
-  width: 14px;
-  height: 14px;
-  color: var(--accent-primary);
-  flex-shrink: 0;
-}
-
-.user-count-badge #user-count-value {
-  color: var(--text-primary);
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-@media (max-width: 640px) {
-  .user-count-badge {
-    bottom: 0.6rem;
-    right: 0.6rem;
-    font-size: 0.7rem;
-    padding: 0.35rem 0.6rem;
-  }
-}
 /* ==========================================================================
    Your Performance Insights Card
    ========================================================================== */

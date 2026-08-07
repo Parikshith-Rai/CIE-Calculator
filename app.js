@@ -410,47 +410,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // PDF Export
   btnExportPdf.addEventListener('click', () => exportPDF());
 
-  // Total users counter
-  initUserCounter();
 });
 
-// --- TOTAL USERS COUNTER ---
-// Uses the free CountAPI service (https://countapi.xyz) so the count is
-// shared across every visitor, not just stored locally. A localStorage flag
-// ensures each browser only increments the total once, so the number
-// approximates unique users rather than total page loads.
-const USER_COUNT_NAMESPACE = 'nmit-cie-hub';
-const USER_COUNT_KEY = 'total-users';
-const USER_COUNTED_FLAG = 'nmit_user_counted_v1';
-
-function initUserCounter() {
-  const valueEl = document.getElementById('user-count-value');
-  if (!valueEl) return;
-
-  const alreadyCounted = localStorage.getItem(USER_COUNTED_FLAG);
-  const endpoint = alreadyCounted
-    ? `https://api.countapi.xyz/get/${USER_COUNT_NAMESPACE}/${USER_COUNT_KEY}`
-    : `https://api.countapi.xyz/hit/${USER_COUNT_NAMESPACE}/${USER_COUNT_KEY}`;
-
-  fetch(endpoint)
-    .then((res) => {
-      if (!res.ok) throw new Error('Counter request failed');
-      return res.json();
-    })
-    .then((data) => {
-      if (typeof data.value === 'number') {
-        valueEl.textContent = data.value.toLocaleString();
-        if (!alreadyCounted) {
-          localStorage.setItem(USER_COUNTED_FLAG, 'true');
-        }
-      }
-    })
-    .catch(() => {
-      // Fail quietly - hide the badge if the counter service is unreachable
-      const badge = document.getElementById('user-count-badge');
-      if (badge) badge.style.display = 'none';
-    });
-}
 
 // --- THEME MANAGEMENT ---
 function initTheme() {
