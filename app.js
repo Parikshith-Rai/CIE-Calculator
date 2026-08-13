@@ -1625,6 +1625,12 @@ function loadPreset(branch, semester) {
   // Automatically save to "Saved Semesters"
   saveCurrentSemester(`${branch} Sem ${semester}`);
   
+  const badge = document.getElementById('active-preset-badge');
+  if (badge) {
+    badge.textContent = `${branch} · Sem ${semester}`;
+    badge.style.display = 'inline-flex';
+  }
+
   showToast(`Loaded ${branch} Semester ${semester} preset successfully`, 'success');
 }
 
@@ -1635,6 +1641,8 @@ function clearAllCourses() {
   pushUndoSnapshot(before);
   saveState();
   renderApp();
+  const badge = document.getElementById('active-preset-badge');
+  if (badge) { badge.style.display = 'none'; badge.textContent = ''; }
   showToast('Cleared all courses', 'danger');
 }
 

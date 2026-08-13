@@ -651,6 +651,29 @@ body {
   letter-spacing: -0.02em;
 }
 
+.section-heading-group {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.active-preset-badge {
+  display: inline-flex;
+  align-items: center;
+  background: var(--accent-primary, #6c63ff);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.22em 0.75em;
+  border-radius: 999px;
+  line-height: 1.5;
+  opacity: 0.88;
+  vertical-align: middle;
+}
+
 .board-actions {
   display: flex;
   gap: 0.75rem;
