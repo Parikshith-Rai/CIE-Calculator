@@ -259,6 +259,16 @@ document.addEventListener('DOMContentLoaded', () => {
   renderApp();
   updateUndoRedoButtons();
 
+  // Restore active preset badge from localStorage
+  const savedPreset = localStorage.getItem('nmit_active_preset');
+  if (savedPreset && courses.length > 0) {
+    const badge = document.getElementById('active-preset-badge');
+    if (badge) {
+      badge.textContent = savedPreset;
+      badge.style.display = 'inline-flex';
+    }
+  }
+
   // Undo / Redo controls
   if (btnUndo) btnUndo.addEventListener('click', () => performUndo());
   if (btnRedo) btnRedo.addEventListener('click', () => performRedo());
@@ -1625,9 +1635,11 @@ function loadPreset(branch, semester) {
   // Automatically save to "Saved Semesters"
   saveCurrentSemester(`${branch} Sem ${semester}`);
   
+  const presetLabel = `${branch} · Sem ${semester}`;
+  localStorage.setItem('nmit_active_preset', presetLabel);
   const badge = document.getElementById('active-preset-badge');
   if (badge) {
-    badge.textContent = `${branch} · Sem ${semester}`;
+    badge.textContent = presetLabel;
     badge.style.display = 'inline-flex';
   }
 
@@ -1641,6 +1653,7 @@ function clearAllCourses() {
   pushUndoSnapshot(before);
   saveState();
   renderApp();
+  localStorage.removeItem('nmit_active_preset');
   const badge = document.getElementById('active-preset-badge');
   if (badge) { badge.style.display = 'none'; badge.textContent = ''; }
   showToast('Cleared all courses', 'danger');
