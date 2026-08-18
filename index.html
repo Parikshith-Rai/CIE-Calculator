@@ -123,6 +123,15 @@
         <p class="card-desc">Simulate your SGPA by predicting your marks for the Semester End Exams (SEE).</p>
         
         <div class="gpa-display">
+          <svg class="sgpa-gauge" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <!-- Track arc -->
+            <path class="gauge-track" d="M 20 110 A 90 90 0 0 1 180 110" fill="none" stroke-width="14" stroke-linecap="round"/>
+            <!-- Value arc -->
+            <path id="sgpa-gauge-arc" class="gauge-fill" d="M 20 110 A 90 90 0 0 1 180 110" fill="none" stroke-width="14" stroke-linecap="round"
+              stroke-dasharray="0 283" />
+            <!-- Tick marks -->
+            <g class="gauge-ticks"></g>
+          </svg>
           <div class="gpa-score-container">
             <span id="sgpa-score" class="gpa-score">0.00</span>
             <span class="gpa-label">Projected SGPA</span>

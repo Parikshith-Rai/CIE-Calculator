@@ -1238,6 +1238,8 @@ function renderSidebar() {
     eligibilityStatusSpan.className = 'status-badge';
     sgpaScoreSpan.innerText = '0.00';
     sgpaProgressBar.style.width = '0%';
+    const arcReset = document.getElementById('sgpa-gauge-arc');
+    if (arcReset) arcReset.style.strokeDasharray = '0 283';
     sgpaBreakdownList.innerHTML = '<p class="card-desc text-center" style="margin: 0">Add courses to see GPA breakdown</p>';
     return;
   }
@@ -1366,6 +1368,22 @@ function calculateSGPA() {
   // Set SGPA progress bar fill (10 is max GPA)
   const barPercent = (sgpa / 10) * 100;
   sgpaProgressBar.style.width = `${barPercent}%`;
+
+  // Update SVG arc gauge
+  const arc = document.getElementById('sgpa-gauge-arc');
+  if (arc) {
+    const ARC_LENGTH = 283; // half-circle circumference for r=90
+    const filled = (sgpa / 10) * ARC_LENGTH;
+    arc.style.strokeDasharray = `${filled} ${ARC_LENGTH - filled}`;
+
+    // Color: red < 5, yellow 5-7, green 7-9, purple 9+
+    let color;
+    if (sgpa >= 9)       color = '#a78bfa';
+    else if (sgpa >= 7)  color = '#34d399';
+    else if (sgpa >= 5)  color = '#fbbf24';
+    else                 color = '#f87171';
+    arc.style.stroke = color;
+  }
 }
 
 // --- PERFORMANCE INSIGHTS ---
