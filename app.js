@@ -788,10 +788,18 @@ function renderCourseBoard() {
     const card = document.createElement('div');
     card.className = `glass-card course-card ${isIntegrated ? 'integrated' : ''} ${isLab ? 'lab-only' : ''}`;
     card.dataset.id = course.id;
+    card.draggable = true;
     
     // Header section
     let headerHTML = `
       <div class="course-card-header">
+        <div class="drag-handle" title="Drag to reorder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="16" y2="6"></line>
+            <line x1="8" y1="12" x2="16" y2="12"></line>
+            <line x1="8" y1="18" x2="16" y2="18"></line>
+          </svg>
+        </div>
         <div class="course-meta-inputs">
           <input type="text" class="input-course-name" value="${course.name}" placeholder="Enter Course Name" aria-label="Course Name">
           <div class="input-field-group">
@@ -982,6 +990,67 @@ function renderCourseBoard() {
     
     // Add event listeners for inputs
     bindCardEvents(card, course.id);
+  });
+
+  initDragAndDrop();
+}
+
+function initDragAndDrop() {
+  const cards = courseCardsList.querySelectorAll('.course-card');
+  let dragSrc = null;
+
+  cards.forEach(card => {
+    // Only start drag from the handle
+    const handle = card.querySelector('.drag-handle');
+
+    handle.addEventListener('mousedown', () => { card.draggable = true; });
+    card.addEventListener('mouseup', () => { card.draggable = false; });
+
+    card.addEventListener('dragstart', e => {
+      dragSrc = card;
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', card.dataset.id);
+      requestAnimationFrame(() => card.classList.add('dragging'));
+    });
+
+    card.addEventListener('dragend', () => {
+      card.classList.remove('dragging');
+      courseCardsList.querySelectorAll('.course-card').forEach(c => c.classList.remove('drag-over'));
+      card.draggable = false;
+      dragSrc = null;
+    });
+
+    card.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      if (card !== dragSrc) {
+        courseCardsList.querySelectorAll('.course-card').forEach(c => c.classList.remove('drag-over'));
+        card.classList.add('drag-over');
+      }
+    });
+
+    card.addEventListener('dragleave', () => {
+      card.classList.remove('drag-over');
+    });
+
+    card.addEventListener('drop', e => {
+      e.preventDefault();
+      if (!dragSrc || dragSrc === card) return;
+      card.classList.remove('drag-over');
+
+      const srcId = dragSrc.dataset.id;
+      const tgtId = card.dataset.id;
+      const srcIdx = courses.findIndex(c => c.id === srcId);
+      const tgtIdx = courses.findIndex(c => c.id === tgtId);
+      if (srcIdx === -1 || tgtIdx === -1) return;
+
+      const before = snapshotCourses();
+      const [moved] = courses.splice(srcIdx, 1);
+      courses.splice(tgtIdx, 0, moved);
+      pushUndoSnapshot(before);
+      saveState();
+      renderApp();
+    });
   });
 }
 
