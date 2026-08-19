@@ -501,10 +501,25 @@ function populateCieSettingsForm() {
 }
 
 // --- DATA PERSISTENCE ---
+let _saveIndicatorTimer = null;
+
+function flashSaveIndicator() {
+  const el = document.getElementById('autosave-indicator');
+  if (!el) return;
+  // Clear any pending hide so rapid saves restart the timer cleanly
+  if (_saveIndicatorTimer) clearTimeout(_saveIndicatorTimer);
+  el.classList.add('visible');
+  _saveIndicatorTimer = setTimeout(() => {
+    el.classList.remove('visible');
+    _saveIndicatorTimer = null;
+  }, 1800);
+}
+
 function saveState() {
   localStorage.setItem('nmit_cie_courses', JSON.stringify(courses));
   localStorage.setItem(SAVED_SEMESTERS_KEY, JSON.stringify(savedSemesters));
   localStorage.setItem(CIE_GUIDELINES_KEY, JSON.stringify(cieGuidelines));
+  flashSaveIndicator();
 }
 
 function loadState() {

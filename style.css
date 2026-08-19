@@ -160,6 +160,32 @@ body {
 
 
 
+/* Auto-save indicator */
+#autosave-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--color-success);
+  background: var(--color-success-bg);
+  border: 1px solid hsla(142, 76%, 36%, 0.2);
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+  white-space: nowrap;
+  user-select: none;
+}
+
+#autosave-indicator.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .brand-text .main-title {
   font-family: var(--font-title);
   font-size: 1.5rem;
