@@ -255,6 +255,7 @@ const PRESETS = {
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   initFontSize();
+  initCompactMode();
   loadState();
   renderApp();
   updateUndoRedoButtons();
@@ -489,6 +490,32 @@ function changeFontSize(delta) {
   showToast(`Font Size: ${currentFontSize}%`, 'info');
 }
 
+// --- COMPACT MODE ---
+function initCompactMode() {
+  const saved = localStorage.getItem('nmit_compact_mode') === 'true';
+  setCompactMode(saved, /* silent */ true);
+
+  const btn = document.getElementById('btn-compact-toggle');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      const current = document.body.getAttribute('data-compact') === 'true';
+      setCompactMode(!current);
+    });
+  }
+}
+
+function setCompactMode(on, silent = false) {
+  document.body.setAttribute('data-compact', on ? 'true' : 'false');
+  localStorage.setItem('nmit_compact_mode', on ? 'true' : 'false');
+
+  const btn = document.getElementById('btn-compact-toggle');
+  if (btn) btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+
+  if (!silent) {
+    showToast(on ? 'Compact mode on' : 'Compact mode off', 'info');
+  }
+}
+
 function populateCieSettingsForm() {
   document.getElementById('set-ni-la1-max').value = cieGuidelines.niLa1Max;
   document.getElementById('set-ni-la2-max').value = cieGuidelines.niLa2Max;
@@ -501,25 +528,10 @@ function populateCieSettingsForm() {
 }
 
 // --- DATA PERSISTENCE ---
-let _saveIndicatorTimer = null;
-
-function flashSaveIndicator() {
-  const el = document.getElementById('autosave-indicator');
-  if (!el) return;
-  // Clear any pending hide so rapid saves restart the timer cleanly
-  if (_saveIndicatorTimer) clearTimeout(_saveIndicatorTimer);
-  el.classList.add('visible');
-  _saveIndicatorTimer = setTimeout(() => {
-    el.classList.remove('visible');
-    _saveIndicatorTimer = null;
-  }, 1800);
-}
-
 function saveState() {
   localStorage.setItem('nmit_cie_courses', JSON.stringify(courses));
   localStorage.setItem(SAVED_SEMESTERS_KEY, JSON.stringify(savedSemesters));
   localStorage.setItem(CIE_GUIDELINES_KEY, JSON.stringify(cieGuidelines));
-  flashSaveIndicator();
 }
 
 function loadState() {
