@@ -571,7 +571,36 @@
     </div>
   </dialog>
 
-
+<!-- Target Score Calculator Modal -->
+<dialog id="target-score-modal" class="modal-dialog">
+  <div class="modal-content glass-card" style="max-width: 440px;">
+    <div class="modal-header">
+      <h2 id="target-modal-title">Target Score Calculator</h2>
+      <button id="btn-close-target-modal" class="btn-icon" aria-label="Close modal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:0.82rem; color:var(--text-secondary); margin-bottom:1rem;">
+        Enter your desired CIE total (out of 50). We'll tell you what you need in each remaining component.
+      </p>
+      <div style="display:flex; gap:0.75rem; align-items:center; margin-bottom:1.25rem;">
+        <label style="font-size:0.9rem; font-weight:600; white-space:nowrap;">Desired CIE</label>
+        <input type="number" id="target-cie-input"
+          min="0" max="50" step="0.5" value="40"
+          style="width:90px; padding:0.4rem 0.6rem; border-radius:8px;
+                 border:1px solid var(--card-border); background:var(--bg-secondary);
+                 color:var(--text-primary); font-size:1rem; text-align:center;">
+        <span style="font-size:0.85rem; color:var(--text-muted);">/ 50</span>
+        <button id="btn-calc-target" class="btn-primary" style="padding:0.4rem 0.9rem; font-size:0.85rem;">Calculate</button>
+      </div>
+      <div id="target-score-results"></div>
+    </div>
+  </div>
+</dialog>
   <div id="toast-container" class="toast-container"></div>
 
 

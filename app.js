@@ -788,6 +788,156 @@ function getSEETargets(cie) {
   return { possible: true, targets };
 }
 
+// --- TARGET SCORE CALCULATOR ---
+// Given a course and a desired CIE total, returns per-component requirements.
+function getTargetBreakdown(course, desiredCie) {
+  const g = cieGuidelines;
+  desiredCie = Math.min(50, Math.max(0, desiredCie));
+
+  if (course.type === 'lab') {
+    const vivaMax   = g.loVivaMax;
+    const labMax    = g.loFinalLabMax;
+    const totalMax  = vivaMax + labMax;
+    if (desiredCie > totalMax) return { feasible: false, reason: `Max possible CIE for lab-only is ${totalMax}.` };
+    const viva      = course.viva     || 0;
+    const finalLab  = course.finalLab || 0;
+    const current   = viva + finalLab;
+    const shortfall = parseFloat((desiredCie - current).toFixed(1));
+    if (shortfall <= 0) return { feasible: true, already: true, current };
+
+    // Suggest filling Viva first, then Final Lab
+    const rows = [];
+    let rem = shortfall;
+    const vivaRoom = vivaMax - viva;
+    if (vivaRoom > 0 && rem > 0) {
+      const need = Math.min(rem, vivaRoom);
+      rows.push({ label: `Viva (max ${vivaMax})`, current: viva, need: parseFloat(need.toFixed(1)), max: vivaMax });
+      rem = parseFloat((rem - need).toFixed(1));
+    }
+    const labRoom = labMax - finalLab;
+    if (labRoom > 0 && rem > 0) {
+      const need = Math.min(rem, labRoom);
+      rows.push({ label: `Final Lab (max ${labMax})`, current: finalLab, need: parseFloat(need.toFixed(1)), max: labMax });
+      rem = parseFloat((rem - need).toFixed(1));
+    }
+    return { feasible: rem <= 0, rows, shortfall, current };
+  }
+
+  // Theory formula reversal helpers
+  // non-integrated: CIE = la1 + la2 + mse1*scale + mse2*scale
+  // integrated:     CIE = (la1 + la2 + mse1*scale + mse2*scale)*theoryWt + lab*pracWt
+
+  const scale = g.niMseScale;
+  const tWt   = course.type === 'integrated' ? g.inTheoryWt : 1;
+  const pWt   = course.type === 'integrated' ? g.inPracWt   : 0;
+  const labMax = g.inLabMax;
+
+  // Current locked values
+  const la1  = course.la1  || 0;
+  const la2  = course.la2  || 0;
+  const mse1 = course.mse1 || 0;
+  const mse2 = course.mse2 || 0;
+  const lab  = course.lab  || 0;
+
+  const currentCie = calculateCourseCIE(course);
+  if (desiredCie <= currentCie) return { feasible: true, already: true, current: currentCie };
+
+  // What CIE contribution must come from the theory block and lab block?
+  // For integrated: desired = theoryBlock*tWt + lab*pWt
+  // We'll show requirements for each component, assuming all others stay fixed.
+
+  const rows = [];
+
+  if (course.type === 'integrated') {
+    // Contribution from lab block at current lab value
+    const labContrib = lab * pWt;
+    // Theory contribution needed
+    const theoryNeeded = desiredCie - labContrib;
+    // Current theory raw = la1 + la2 + mse1*scale + mse2*scale
+    const currentTheoryRaw = la1 + la2 + mse1 * scale + mse2 * scale;
+    const currentTheoryContrib = currentTheoryRaw * tWt;
+
+    // Option A: adjust theory components only (lab stays same)
+    if (theoryNeeded / tWt <= (g.niLa1Max + g.niLa2Max + 50 * scale + 50 * scale)) {
+      const theoryRawNeeded = theoryNeeded / tWt;
+      const theoryShortfall = parseFloat((theoryRawNeeded - currentTheoryRaw).toFixed(2));
+
+      // Per-component breakdown
+      _addTheoryRows(rows, { la1, la2, mse1, mse2, scale, g }, theoryShortfall, tWt, pWt, false);
+    }
+
+    // Option B: adjust lab only (theory stays same)
+    const labNeeded = (desiredCie - currentTheoryContrib) / pWt;
+    if (labNeeded >= 0 && labNeeded <= labMax) {
+      const labNeed = parseFloat((labNeeded - lab).toFixed(1));
+      if (labNeed > 0 && labNeed <= labMax - lab) {
+        rows.push({
+          label: `Lab Assessment (max ${labMax})`,
+          current: lab,
+          need: parseFloat(labNeed.toFixed(1)),
+          max: labMax,
+          note: 'if theory stays the same'
+        });
+      }
+    }
+  } else {
+    // Non-integrated: direct
+    const shortfall = parseFloat((desiredCie - currentCie).toFixed(1));
+    _addTheoryRows(rows, { la1, la2, mse1, mse2, scale, g }, shortfall, 1, 0, true);
+  }
+
+  if (rows.length === 0) {
+    const maxPossible = course.type === 'integrated'
+      ? parseFloat(((g.niLa1Max + g.niLa2Max + 50*scale + 50*scale)*tWt + labMax*pWt).toFixed(1))
+      : parseFloat((g.niLa1Max + g.niLa2Max + 50*scale + 50*scale).toFixed(1));
+    return { feasible: false, reason: `Target ${desiredCie} is beyond the max possible CIE of ${maxPossible} for this course type.` };
+  }
+
+  return { feasible: true, already: false, rows, current: currentCie };
+}
+
+// Internal helper — adds per-theory-component rows
+function _addTheoryRows(rows, { la1, la2, mse1, mse2, scale, g }, shortfall, tWt, pWt, isNonInt) {
+  // For each component, how much more is needed if only that component changes?
+  const la1Room  = g.niLa1Max - la1;
+  const la2Room  = g.niLa2Max - la2;
+  const mse1Room = 50 - mse1;
+  const mse2Room = 50 - mse2;
+
+  // LA-1
+  if (la1Room > 0) {
+    const need = isNonInt ? shortfall : shortfall / tWt;
+    const needRounded = parseFloat(Math.ceil(need * 2) / 2 + ''); // round up to nearest 0.5
+    if (needRounded <= la1Room) {
+      rows.push({ label: `LA-1 (max ${g.niLa1Max})`, current: la1, need: needRounded, max: g.niLa1Max, note: isNonInt ? null : `if only LA-1 changes` });
+    }
+  }
+  // LA-2
+  if (la2Room > 0) {
+    const need = isNonInt ? shortfall : shortfall / tWt;
+    const needRounded = parseFloat(Math.ceil(need * 2) / 2 + '');
+    if (needRounded <= la2Room) {
+      rows.push({ label: `LA-2 (max ${g.niLa2Max})`, current: la2, need: needRounded, max: g.niLa2Max, note: isNonInt ? null : `if only LA-2 changes` });
+    }
+  }
+  // MSE-1
+  if (mse1Room > 0) {
+    const rawShortfall = isNonInt ? shortfall / scale : shortfall / (scale * tWt);
+    const needRounded = parseFloat(Math.ceil(rawShortfall * 2) / 2 + '');
+    if (needRounded <= mse1Room) {
+      rows.push({ label: `MSE-1 (max 50)`, current: mse1, need: needRounded, max: 50, note: isNonInt ? null : `if only MSE-1 changes` });
+    }
+  }
+  // MSE-2
+  if (mse2Room > 0) {
+    const rawShortfall = isNonInt ? shortfall / scale : shortfall / (scale * tWt);
+    const needRounded = parseFloat(Math.ceil(rawShortfall * 2) / 2 + '');
+    if (needRounded <= mse2Room) {
+      rows.push({ label: `MSE-2 (max 50)`, current: mse2, need: needRounded, max: mse2Room, note: isNonInt ? null : `if only MSE-2 changes` });
+    }
+  }
+}
+
 // --- RENDER APP & DYNAMIC UPDATING ---
 function renderApp() {
   renderCourseBoard();
@@ -985,7 +1135,7 @@ function renderCourseBoard() {
               </svg>
               <span>${hintText}</span>
             </div>
-            <button class="see-targets-badge btn-view-targets">
+            <button class="see-targets-badge btn-target-score" style="background:var(--accent-primary);color:#fff;">
               SEE Targets
               <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="6 9 12 15 18 9"></polyline>
@@ -1248,6 +1398,7 @@ function bindCardEvents(cardElement, courseId) {
   
   // Show detailed targets popup
   const targetsBtn = cardElement.querySelector('.btn-view-targets');
+  card.querySelector('.btn-target-score')?.addEventListener('click', () => openTargetScoreModal(course));
   if (targetsBtn) {
     targetsBtn.addEventListener('click', () => {
       showDetailedTargetsToast(course);
@@ -2374,3 +2525,88 @@ function downloadShareCard() {
     showToast('Could not generate image', 'error');
   });
 }
+
+function openTargetScoreModal(course) {
+  const modal = document.getElementById('target-score-modal');
+  const title = document.getElementById('target-modal-title');
+  const input = document.getElementById('target-cie-input');
+  const results = document.getElementById('target-score-results');
+
+  title.textContent = `Target Score — ${course.name}`;
+  input.value = 40;
+  results.innerHTML = '';
+
+  const currentCie = calculateCourseCIE(course);
+
+  function renderResults() {
+    const desired = parseFloat(input.value);
+    if (isNaN(desired) || desired < 0 || desired > 50) {
+      results.innerHTML = `<p style="color:var(--accent-danger);font-size:0.85rem;">Enter a value between 0 and 50.</p>`;
+      return;
+    }
+
+    const breakdown = getTargetBreakdown(course, desired);
+
+    if (!breakdown.feasible) {
+      results.innerHTML = `<div class="target-result-box infeasible">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>
+        <span>${breakdown.reason}</span>
+      </div>`;
+      return;
+    }
+
+    if (breakdown.already) {
+      results.innerHTML = `<div class="target-result-box already-met">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>
+        <span>You already have <strong>${breakdown.current}</strong> — target of <strong>${desired}</strong> is already met!</span>
+      </div>`;
+      return;
+    }
+
+    const rowsHTML = breakdown.rows.map(row => {
+      const pct = Math.round(((row.current + row.need) / row.max) * 100);
+      return `
+        <div class="target-component-row">
+          <div class="target-comp-header">
+            <span class="target-comp-label">${row.label}</span>
+            ${row.note ? `<span class="target-comp-note">${row.note}</span>` : ''}
+          </div>
+          <div class="target-comp-bar-wrap">
+            <div class="target-comp-bar-bg">
+              <div class="target-comp-bar-filled" style="width:${Math.round((row.current/row.max)*100)}%"></div>
+              <div class="target-comp-bar-needed" style="left:${Math.round((row.current/row.max)*100)}%; width:${Math.round((row.need/row.max)*100)}%"></div>
+            </div>
+          </div>
+          <div class="target-comp-numbers">
+            <span>Current: <strong>${row.current}</strong></span>
+            <span class="target-need-tag">Need <strong>+${row.need}</strong> more → <strong>${parseFloat((row.current + row.need).toFixed(1))}</strong> / ${row.max}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    results.innerHTML = `
+      <div class="target-result-summary">
+        <span>Current CIE: <strong>${currentCie}</strong></span>
+        <span class="arrow-sep">→</span>
+        <span>Target: <strong>${desired}</strong></span>
+        <span class="gap-tag">gap: ${parseFloat((desired - currentCie).toFixed(1))}</span>
+      </div>
+      <p style="font-size:0.78rem;color:var(--text-muted);margin-bottom:0.75rem;">
+        Each row below shows one possible path to reach your target — pick the component you still have left.
+      </p>
+      <div class="target-components-list">${rowsHTML}</div>
+    `;
+  }
+
+  document.getElementById('btn-calc-target').onclick = renderResults;
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') renderResults(); });
+  renderResults();
+
+  modal.showModal();
+}
+
+  // Target Score Calculator Modal
+  const targetScoreModal = document.getElementById('target-score-modal');
+  document.getElementById('btn-close-target-modal').addEventListener('click', () => targetScoreModal.close());
+  targetScoreModal.addEventListener('click', e => { if (e.target === targetScoreModal) targetScoreModal.close(); });
