@@ -2610,3 +2610,221 @@ function openTargetScoreModal(course) {
   const targetScoreModal = document.getElementById('target-score-modal');
   document.getElementById('btn-close-target-modal').addEventListener('click', () => targetScoreModal.close());
   targetScoreModal.addEventListener('click', e => { if (e.target === targetScoreModal) targetScoreModal.close(); });
+
+/* ==========================================================================
+   AI CHATBOT — CIE Assistant
+   ========================================================================== */
+(function () {
+  const fab       = document.getElementById('chatbot-fab');
+  const panel     = document.getElementById('chatbot-panel');
+  const closeBtn  = document.getElementById('chatbot-close');
+  const input     = document.getElementById('chatbot-input');
+  const sendBtn   = document.getElementById('chatbot-send');
+  const msgArea   = document.getElementById('chatbot-messages');
+  const chipsWrap = document.getElementById('chatbot-suggestions');
+
+  let isOpen    = false;
+  let isLoading = false;
+  let chatHistory = []; // {role, content}[]
+
+  // ── System prompt ──────────────────────────────────────────────────────────
+  const SYSTEM_PROMPT = `You are CIE Assistant, a concise and friendly academic helper embedded in the NMIT CIE Hub — a tool for students at Nitte Meenakshi Institute of Technology, Bangalore.
+
+Your sole focus is answering questions about NMIT's Continuous Internal Evaluation (CIE) system, SGPA calculation, grading policies, and using the NMIT CIE Hub app. Keep answers short and precise (2–5 sentences max unless the user asks for details).
+
+═══ NMIT CIE GUIDELINES ═══
+
+▸ NON-INTEGRATED COURSES (theory only)
+  • LA1 (LoT 1): max 10 marks
+  • LA2 (LoT 2): max 10 marks
+  • MSE: best of MSE1 & MSE2 (each out of 50), scaled to 30 marks  →  MSE_scaled = best(MSE1, MSE2) × 0.30
+  • CIE = LA1 + LA2 + MSE_scaled   (max = 50)
+  • Minimum to be eligible for SEE: CIE ≥ 20 out of 50
+
+▸ INTEGRATED COURSES (theory + lab combined)
+  • Theory component = LA1 + LA2 + MSE_scaled  (max 30)   [same as non-integrated formula]
+  • Lab component = Lab marks out of 20
+  • CIE = (Theory_component × 0.60) + (Lab_component × 0.40) × (50/20)
+    Simplified: CIE = Theory_component × 0.60 + Lab_component × 1.00  (scaled to 50)
+  • Minimum to pass: CIE ≥ 20
+
+▸ LAB-ONLY COURSES
+  • Viva: max 10 marks
+  • Final Lab Exam: max 40 marks
+  • CIE = Viva + Final_Lab (max 50)
+  • Minimum to pass: CIE ≥ 20
+
+═══ SGPA CALCULATION ═══
+  SGPA = Σ(Grade_Points × Credits) / Σ(Credits)   [for eligible courses only]
+
+  Grade scale (based on final score = CIE + SEE/2, capped at 100):
+  Score ≥ 90 → O  (10 pts)
+  Score ≥ 80 → A+ (9 pts)
+  Score ≥ 70 → A  (8 pts)
+  Score ≥ 60 → B+ (7 pts)
+  Score ≥ 55 → B  (6 pts)
+  Score ≥ 50 → C  (5 pts)
+  Score ≥ 45 → P  (4 pts)
+  Score < 45 → F  (0 pts, fail)
+
+═══ KEY RULES ═══
+  • Student must score ≥ 20/50 in CIE to sit for SEE (Semester End Exam).
+  • SEE is out of 100; it contributes 50% of the final score (SEE/2).
+  • LA tests are conducted by the faculty within the department.
+  • MSE (Mid-Semester Exam) is conducted centrally.
+  • Only the best of MSE1 and MSE2 is considered.
+
+═══ ABOUT THE APP ═══
+  • Load branch/semester presets to auto-fill course list.
+  • Add Non-Integrated, Integrated, or Lab-Only courses manually.
+  • Use the Target Score Calculator (button on each course card) to find what you need in remaining components.
+  • Export a PDF report or share a result card image.
+  • Undo/redo support for all changes.
+  • Data is auto-saved in your browser's localStorage.
+
+If a question is unrelated to NMIT academics or the CIE Hub app, politely say you can only help with CIE/SGPA topics.`;
+
+  // ── Toggle open/close ──────────────────────────────────────────────────────
+  function togglePanel() {
+    isOpen = !isOpen;
+    panel.classList.toggle('open', isOpen);
+    fab.classList.toggle('open', isOpen);
+    panel.setAttribute('aria-hidden', String(!isOpen));
+    if (isOpen) {
+      if (chatHistory.length === 0) addBotMessage("Hi! 👋 I'm your CIE Assistant. Ask me anything about CIE marks, SGPA, eligibility, or how to use this app.");
+      setTimeout(() => input.focus(), 250);
+    }
+  }
+
+  fab.addEventListener('click', togglePanel);
+  closeBtn.addEventListener('click', togglePanel);
+
+  // Close on outside click
+  document.addEventListener('click', e => {
+    if (isOpen && !panel.contains(e.target) && !fab.contains(e.target)) togglePanel();
+  });
+
+  // ── Message rendering ──────────────────────────────────────────────────────
+  function scrollBottom() {
+    msgArea.scrollTo({ top: msgArea.scrollHeight, behavior: 'smooth' });
+  }
+
+  function addUserMessage(text) {
+    const div = document.createElement('div');
+    div.className = 'chat-msg user';
+    div.innerHTML = `<div class="chat-bubble">${escapeHtml(text)}</div>`;
+    msgArea.appendChild(div);
+    scrollBottom();
+  }
+
+  function addBotMessage(text) {
+    const div = document.createElement('div');
+    div.className = 'chat-msg bot';
+    div.innerHTML = `<div class="chat-bubble">${formatBotText(text)}</div>`;
+    msgArea.appendChild(div);
+    scrollBottom();
+    return div;
+  }
+
+  function showTyping() {
+    const div = document.createElement('div');
+    div.className = 'chat-msg bot chat-typing';
+    div.id = 'chat-typing-indicator';
+    div.innerHTML = `<div class="chat-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>`;
+    msgArea.appendChild(div);
+    scrollBottom();
+  }
+
+  function removeTyping() {
+    const el = document.getElementById('chat-typing-indicator');
+    if (el) el.remove();
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function formatBotText(text) {
+    // Bold **text** and line breaks
+    return escapeHtml(text)
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
+  }
+
+  // ── Suggestion chips ───────────────────────────────────────────────────────
+  chipsWrap.querySelectorAll('.chatbot-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const q = chip.dataset.q;
+      chipsWrap.style.display = 'none'; // hide chips after first use
+      sendMessage(q);
+    });
+  });
+
+  // ── Send logic ─────────────────────────────────────────────────────────────
+  async function sendMessage(text) {
+    text = (text || input.value).trim();
+    if (!text || isLoading) return;
+
+    input.value = '';
+    resizeInput();
+    chipsWrap.style.display = 'none';
+    addUserMessage(text);
+    chatHistory.push({ role: 'user', content: text });
+
+    isLoading = true;
+    sendBtn.disabled = true;
+    showTyping();
+
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1000,
+          system: SYSTEM_PROMPT,
+          messages: chatHistory
+        })
+      });
+
+      const data = await response.json();
+      removeTyping();
+
+      if (data.error) {
+        addBotMessage('Sorry, something went wrong. Please try again.');
+        chatHistory.pop(); // remove the user message if failed
+      } else {
+        const reply = data.content
+          .filter(b => b.type === 'text')
+          .map(b => b.text)
+          .join('');
+        chatHistory.push({ role: 'assistant', content: reply });
+        addBotMessage(reply);
+      }
+    } catch (err) {
+      removeTyping();
+      addBotMessage('Network error. Please check your connection and try again.');
+      chatHistory.pop();
+    } finally {
+      isLoading = false;
+      sendBtn.disabled = false;
+      input.focus();
+    }
+  }
+
+  sendBtn.addEventListener('click', () => sendMessage());
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  // Auto-resize textarea
+  function resizeInput() {
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 100) + 'px';
+  }
+  input.addEventListener('input', resizeInput);
+})();
