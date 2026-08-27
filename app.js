@@ -2778,7 +2778,11 @@ If a question is unrelated to NMIT academics or the CIE Hub app, politely say yo
     try {
       const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
         body: JSON.stringify({
           model: 'claude-sonnet-4-6',
           max_tokens: 1000,
@@ -2790,7 +2794,8 @@ If a question is unrelated to NMIT academics or the CIE Hub app, politely say yo
       const data = await response.json();
       removeTyping();
 
-      if (data.error) {
+      if (!response.ok || data.error) {
+        console.error('Chatbot API error:', data.error || response.status);
         addBotMessage('Sorry, something went wrong. Please try again.');
         chatHistory.pop(); // remove the user message if failed
       } else {
