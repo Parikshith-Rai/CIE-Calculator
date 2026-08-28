@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>503 — Under Maintenance · NMIT CIE Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --font-sans: 'Inter', system-ui, sans-serif;
+      --font-title: 'Outfit', var(--font-sans);
+      --bg-primary: hsl(220,20%,97%);
+      --bg-secondary: hsl(220,20%,92%);
+      --card-bg: rgba(255,255,255,0.9);
+      --card-border: rgba(0,0,0,0.1);
+      --text-primary: hsl(224,71%,4%);
+      --text-secondary: hsl(220,10%,35%);
+      --text-muted: hsl(220,10%,55%);
+      --accent-primary: hsl(215,90%,48%);
+      --accent-secondary: hsl(215,70%,42%);
+      --color-success: hsl(142,76%,36%);
+      --shadow-lg: 0 16px 32px rgba(0,0,0,0.08);
+      --radius-lg: 18px;
+    }
+    [data-theme="dark"] {
+      --bg-primary: hsl(220,30%,8%);
+      --bg-secondary: hsl(220,25%,12%);
+      --card-bg: hsl(220,25%,12%);
+      --card-border: hsl(220,20%,20%);
+      --text-primary: hsl(220,30%,96%);
+      --text-secondary: hsl(220,15%,70%);
+      --text-muted: hsl(220,10%,50%);
+      --accent-primary: hsl(215,95%,60%);
+      --accent-secondary: hsl(215,80%,55%);
+      --shadow-lg: 0 16px 32px rgba(0,0,0,0.3);
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font-sans); background: var(--bg-primary); color: var(--text-primary);
+      min-height: 100dvh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 2rem 1.5rem; transition: background 0.25s, color 0.25s;
+    }
+    .theme-btn {
+      position: fixed; top: 1.1rem; right: 1.1rem;
+      background: var(--card-bg); border: 1px solid var(--card-border);
+      border-radius: 50%; width: 38px; height: 38px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 1rem; box-shadow: var(--shadow-lg);
+    }
+    .card {
+      background: var(--card-bg); border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg); box-shadow: var(--shadow-lg);
+      padding: 3rem 2.5rem 2.5rem; max-width: 480px; width: 100%;
+      text-align: center; position: relative; overflow: hidden;
+    }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+      background: linear-gradient(90deg, var(--color-success), hsl(142,76%,52%));
+    }
+    .illustration { width: 80px; height: 80px; margin: 0 auto 1.5rem; }
+    /* wrench swing */
+    .wrench { animation: swing 2s ease-in-out infinite; transform-origin: 20px 20px; }
+    @keyframes swing {
+      0%,100% { transform: rotate(-20deg); }
+      50%      { transform: rotate(20deg); }
+    }
+    /* progress bar fill */
+    .prog-fill { animation: prog 3s ease-in-out infinite alternate; }
+    @keyframes prog { from { width: 25%; } to { width: 85%; } }
+
+    .error-code {
+      font-family: var(--font-title); font-size: clamp(5rem,18vw,8rem);
+      font-weight: 900; line-height: 1; letter-spacing: -0.04em;
+      background: linear-gradient(135deg, var(--color-success) 0%, hsl(142,76%,52%) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text; margin-bottom: 0.15em; user-select: none;
+    }
+    .badge {
+      display: inline-block; font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--color-success); background: hsla(142,76%,36%,0.1);
+      border-radius: 6px; padding: 0.2em 0.6em; margin-bottom: 1rem;
+    }
+    h1 { font-family: var(--font-title); font-size: 1.45rem; font-weight: 800; margin-bottom: 0.6rem; }
+    p  { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem; }
+
+    /* Progress bar */
+    .progress-wrap {
+      background: var(--bg-secondary); border: 1px solid var(--card-border);
+      border-radius: 12px; padding: 1rem 1.2rem; margin-bottom: 1.75rem; text-align: left;
+    }
+    .progress-label {
+      font-size: 0.78rem; font-weight: 600; color: var(--text-secondary);
+      margin-bottom: 0.55rem; display: flex; justify-content: space-between;
+    }
+    .progress-track {
+      height: 8px; background: var(--card-border); border-radius: 999px; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--color-success), hsl(142,76%,52%));
+      border-radius: 999px;
+      animation: prog 3s ease-in-out infinite alternate;
+    }
+    .progress-note {
+      font-size: 0.72rem; color: var(--text-muted); margin-top: 0.5rem;
+    }
+
+    .actions { display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      padding: 0.6rem 1.3rem; border-radius: 10px;
+      font-family: var(--font-sans); font-size: 0.875rem; font-weight: 600;
+      cursor: pointer; text-decoration: none; border: none;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--accent-primary); color: #fff; }
+    .btn-primary:hover { background: var(--accent-secondary); }
+    .btn-ghost { background: var(--bg-secondary); color: var(--text-secondary); border: 1px solid var(--card-border); }
+    .spinner { display:none; width:15px; height:15px; border:2px solid rgba(255,255,255,0.4); border-top-color:#fff; border-radius:50%; animation:spn 0.7s linear infinite; }
+    @keyframes spn { to { transform:rotate(360deg); } }
+    .btn-primary.loading .spinner { display:block; }
+    .btn-primary.loading .lbl { display:none; }
+    footer { margin-top: 2rem; font-size: 0.75rem; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">🌙</button>
+  <div class="card">
+    <div class="illustration">
+      <svg viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <!-- Background circle -->
+        <circle cx="40" cy="40" r="30" fill="hsla(142,76%,36%,0.08)" stroke="hsl(142,76%,36%)" stroke-width="2.5" stroke-dasharray="6 4"/>
+        <!-- Wrench -->
+        <g class="wrench">
+          <path d="M20 20 Q24 16 30 18 L52 42 Q56 48 52 52 Q48 56 42 52 L20 30 Q16 24 20 20Z"
+                fill="hsla(142,76%,36%,0.15)" stroke="hsl(142,76%,36%)" stroke-width="2.5" stroke-linejoin="round"/>
+          <circle cx="22" cy="22" r="5" fill="hsl(142,76%,36%)" opacity="0.4"/>
+          <circle cx="50" cy="50" r="5" fill="hsl(142,76%,36%)" opacity="0.4"/>
+        </g>
+      </svg>
+    </div>
+    <div class="error-code">503</div>
+    <div class="badge">Under Maintenance</div>
+    <h1>We're tuning things up</h1>
+    <p>The service is temporarily unavailable while we apply updates. Your CIE data is safe in your browser — this won't take long.</p>
+
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>Maintenance in progress</span>
+        <span id="pct">—</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progFill"></div>
+      </div>
+      <div class="progress-note">Estimated time: a few minutes</div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" id="retryBtn">
+        <div class="spinner"></div>
+        <span class="lbl">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:middle"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+          Check again
+        </span>
+      </button>
+      <a href="index.html" class="btn btn-ghost">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/></svg>
+        CIE Hub
+      </a>
+    </div>
+  </div>
+  <footer>NMIT CIE Hub · Nitte Meenakshi Institute of Technology</footer>
+  <script>
+    const themeBtn = document.getElementById('themeBtn');
+    const saved = localStorage.getItem('nmit-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', saved);
+    themeBtn.textContent = saved === 'dark' ? '☀️' : '🌙';
+    themeBtn.addEventListener('click', () => {
+      const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('nmit-theme', next);
+      themeBtn.textContent = next === 'dark' ? '☀️' : '🌙';
+    });
+
+    // Animated percentage counter to match the CSS progress bar animation
+    const pct = document.getElementById('pct');
+    let val = 25;
+    let dir = 1;
+    setInterval(() => {
+      val += dir * 0.6;
+      if (val >= 85) dir = -1;
+      if (val <= 25) dir = 1;
+      pct.textContent = Math.round(val) + '%';
+    }, 50);
+
+    document.getElementById('retryBtn').addEventListener('click', function() {
+      this.classList.add('loading'); this.disabled = true;
+      setTimeout(() => window.location.reload(), 800);
+    });
+  </script>
+</body>
+</html>
