@@ -2612,7 +2612,7 @@ function openTargetScoreModal(course) {
   targetScoreModal.addEventListener('click', e => { if (e.target === targetScoreModal) targetScoreModal.close(); });
 
 /* ==========================================================================
-   AI CHATBOT — CIE Assistant
+   AI CHATBOT — CIE Assistant (rule-based, no API key needed)
    ========================================================================== */
 (function () {
   const fab       = document.getElementById('chatbot-fab');
@@ -2623,90 +2623,159 @@ function openTargetScoreModal(course) {
   const msgArea   = document.getElementById('chatbot-messages');
   const chipsWrap = document.getElementById('chatbot-suggestions');
 
-  let isOpen    = false;
-  let isLoading = false;
-  let chatHistory = []; // {role, content}[]
+  let isOpen = false;
 
-  // ── System prompt ──────────────────────────────────────────────────────────
-  const SYSTEM_PROMPT = `You are CIE Assistant, a concise and friendly academic helper embedded in the NMIT CIE Hub — a tool for students at Nitte Meenakshi Institute of Technology, Bangalore.
+  // ── Knowledge base ──────────────────────────────────────────────────────────
+  // Each entry: { patterns: [regex|string, ...], answer: string }
+  const KB = [
+    {
+      patterns: [/min(imum)?.*(cie|mark|score|pass)/i, /cie.*min/i, /pass.*cie/i, /eligible.*see/i, /see.*eligible/i, /eligib/i],
+      answer: `**Minimum CIE to pass:** You need at least **20 out of 50** in CIE to be eligible to sit for the SEE (Semester End Exam). This applies to all course types.`
+    },
+    {
+      patterns: [/non.?integrat/i, /theory.*only/i, /only.*theory/i],
+      answer: `**Non-Integrated Course CIE formula:**\n• LA1 (LoT 1) → max 10\n• LA2 (LoT 2) → max 10\n• MSE → best of MSE1 & MSE2 (out of 50) × 0.30 → max 30\n\n**CIE = LA1 + LA2 + MSE_scaled** (max 50)`
+    },
+    {
+      patterns: [/integrat/i, /theory.*lab/i, /lab.*theory/i],
+      answer: `**Integrated Course CIE formula:**\n• Theory component = LA1 + LA2 + MSE_scaled (max 30)\n• Lab component = Lab marks (max 20)\n\n**CIE = Theory × 0.60 + Lab × 1.00** (max 50)\n\nMinimum 20/50 needed for SEE eligibility.`
+    },
+    {
+      patterns: [/lab.?(only|course|based)/i, /only.*lab/i, /viva/i],
+      answer: `**Lab-Only Course CIE formula:**\n• Viva → max 10\n• Final Lab Exam → max 40\n\n**CIE = Viva + Final Lab** (max 50)\n\nMinimum 20/50 needed for SEE eligibility.`
+    },
+    {
+      patterns: [/mse/i, /mid.?sem/i, /midterm/i],
+      answer: `**MSE (Mid-Semester Exam):**\n• Two MSEs are conducted (MSE1 and MSE2), each out of 50.\n• Only the **best** of the two is counted.\n• It's scaled to 30 marks: **MSE_scaled = best(MSE1, MSE2) × 0.30**`
+    },
+    {
+      patterns: [/la1|la2|lot|lab on test|lab.*test/i],
+      answer: `**LA1 & LA2 (Lab on Tests):**\n• These are conducted by your faculty within the department.\n• LA1 is out of 10, LA2 is out of 10.\n• Both are added directly to your CIE.`
+    },
+    {
+      patterns: [/see/i, /semester.*end/i, /end.*exam/i, /final.*exam/i],
+      answer: `**SEE (Semester End Exam):**\n• SEE is out of 100 marks.\n• It contributes **50%** of your final score (i.e., SEE/2 is used).\n• Final Score = CIE + SEE/2 (max 100)\n• You must score ≥ 20 in CIE to be allowed to write SEE.`
+    },
+    {
+      patterns: [/final.*score|total.*score|how.*calculat.*final|cie.*see.*combin/i],
+      answer: `**Final Score = CIE + SEE/2**\n\nCIE is out of 50 and counts as-is. SEE is out of 100 and is halved. So the final score is out of 100.\n\nExample: CIE = 40, SEE = 72 → Final = 40 + 36 = **76**`
+    },
+    {
+      patterns: [/sgpa/i, /gpa/i, /grade.*point.*avg/i],
+      answer: `**SGPA Calculation:**\nSGPA = Σ(Grade Points × Credits) ÷ Σ(Credits)\n\nOnly courses where you're eligible (CIE ≥ 20) are counted. The grade is based on your final score (CIE + SEE/2).`
+    },
+    {
+      patterns: [/grade.*table|grade.*scale|grade.*point|point.*grade|o.*grade|a\+.*grade|grading/i],
+      answer: `**NMIT Grade Scale (based on Final Score):**\n• ≥ 90 → O  (10 pts)\n• ≥ 80 → A+ (9 pts)\n• ≥ 70 → A  (8 pts)\n• ≥ 60 → B+ (7 pts)\n• ≥ 55 → B  (6 pts)\n• ≥ 50 → C  (5 pts)\n• ≥ 45 → P  (4 pts)\n• < 45 → F  (0 pts, fail)`
+    },
+    {
+      patterns: [/credit/i],
+      answer: `Credits are assigned per course by NMIT (typically 3 or 4 for theory, 1–2 for labs). They're shown on your timetable/syllabus. SGPA weighs each course's grade points by its credits.`
+    },
+    {
+      patterns: [/preset/i, /branch|semester|load.*course/i],
+      answer: `**Using Presets:**\nClick **Load Preset** and pick your branch and semester. The app will auto-fill all courses with the correct credit values. Branches supported: CSE, ISE, AIDS, AIML, CSBS, ECE, VLSI, EEE, AE, CE, ME, RAI.`
+    },
+    {
+      patterns: [/target.*score|target.*calc|what.*need.*score|how.*much.*need/i],
+      answer: `**Target Score Calculator:**\nClick the 🎯 icon on any course card. Enter your desired CIE and the app will tell you exactly what you need in each remaining component (LA1, LA2, MSE) to hit that target.`
+    },
+    {
+      patterns: [/add.*course|new.*course|course.*type/i],
+      answer: `**Adding Courses:**\nClick **Add Course** and choose the type:\n• Non-Integrated (theory only)\n• Integrated (theory + lab)\n• Lab-Only\n\nThe correct CIE formula is applied automatically based on the type.`
+    },
+    {
+      patterns: [/pdf|export|download|print/i],
+      answer: `**Export to PDF:**\nClick the **Export PDF** button in the top bar. It generates a formatted report of all your courses, CIE marks, and SGPA — no printing required.`
+    },
+    {
+      patterns: [/share|result.*card|card.*image|png/i],
+      answer: `**Share Result Card:**\nClick the **Share** button to generate a shareable image (PNG) of your SGPA result card, which you can save or share directly.`
+    },
+    {
+      patterns: [/dark.*mode|light.*mode|theme/i],
+      answer: `**Theme:**\nToggle between dark and light mode using the 🌙/☀️ button in the top-right corner. Your preference is saved automatically.`
+    },
+    {
+      patterns: [/undo|redo/i],
+      answer: `**Undo / Redo:**\nUse Ctrl+Z / Ctrl+Y (or ⌘Z / ⌘Y on Mac) to undo or redo any changes to your marks or courses.`
+    },
+    {
+      patterns: [/save|auto.?save|lost.*data|data.*lost/i],
+      answer: `**Auto-Save:**\nYour data is automatically saved in your browser's localStorage every time you make a change. As long as you use the same browser, your data will persist between sessions.`
+    },
+    {
+      patterns: [/compact.*mode|mode.*compact/i],
+      answer: `**Compact Mode:**\nToggle compact mode from the toolbar to reduce the size of course cards — useful when you have many courses and want to see them all at once.`
+    },
+    {
+      patterns: [/drag|reorder|order.*course|move.*course/i],
+      answer: `**Reorder Courses:**\nYou can drag and drop course cards to reorder them however you like. Just click and hold the drag handle (⠿) on the left side of a card.`
+    },
+    {
+      patterns: [/what.*app|about.*app|what.*hub|nmit.*hub|cie.*hub/i],
+      answer: `**NMIT CIE Hub** is a free, offline-friendly web app for NMIT students to:\n• Track CIE marks for all courses\n• Calculate SGPA automatically\n• Plan target scores\n• Export PDF reports and share result cards\n\nNo login or internet needed — everything runs in your browser.`
+    },
+    {
+      patterns: [/hi|hello|hey|sup|hola/i],
+      answer: `Hi there! 👋 I'm the CIE Assistant. Ask me anything about CIE marks, SGPA, grading, or how to use this app!`
+    },
+    {
+      patterns: [/thank/i],
+      answer: `You're welcome! 😊 Feel free to ask if you have more questions about CIE or SGPA.`
+    },
+    {
+      patterns: [/help|what.*can.*ask|what.*know|topic/i],
+      answer: `I can help you with:\n• CIE formulas (Non-Integrated, Integrated, Lab-Only)\n• MSE, LA1, LA2 marks explained\n• SEE eligibility rules\n• SGPA & grade point calculation\n• Using this app (presets, target calculator, PDF export, etc.)\n\nJust ask!`
+    }
+  ];
 
-Your sole focus is answering questions about NMIT's Continuous Internal Evaluation (CIE) system, SGPA calculation, grading policies, and using the NMIT CIE Hub app. Keep answers short and precise (2–5 sentences max unless the user asks for details).
+  function getBotReply(text) {
+    const q = text.trim();
+    for (const entry of KB) {
+      for (const pattern of entry.patterns) {
+        if (typeof pattern === 'string' ? q.toLowerCase().includes(pattern) : pattern.test(q)) {
+          return entry.answer;
+        }
+      }
+    }
+    return `I'm not sure about that one. Try asking about:\n• CIE formula for integrated / non-integrated / lab courses\n• Minimum CIE to pass\n• How SGPA is calculated\n• Grade points table\n• How to use this app`;
+  }
 
-═══ NMIT CIE GUIDELINES ═══
-
-▸ NON-INTEGRATED COURSES (theory only)
-  • LA1 (LoT 1): max 10 marks
-  • LA2 (LoT 2): max 10 marks
-  • MSE: best of MSE1 & MSE2 (each out of 50), scaled to 30 marks  →  MSE_scaled = best(MSE1, MSE2) × 0.30
-  • CIE = LA1 + LA2 + MSE_scaled   (max = 50)
-  • Minimum to be eligible for SEE: CIE ≥ 20 out of 50
-
-▸ INTEGRATED COURSES (theory + lab combined)
-  • Theory component = LA1 + LA2 + MSE_scaled  (max 30)   [same as non-integrated formula]
-  • Lab component = Lab marks out of 20
-  • CIE = (Theory_component × 0.60) + (Lab_component × 0.40) × (50/20)
-    Simplified: CIE = Theory_component × 0.60 + Lab_component × 1.00  (scaled to 50)
-  • Minimum to pass: CIE ≥ 20
-
-▸ LAB-ONLY COURSES
-  • Viva: max 10 marks
-  • Final Lab Exam: max 40 marks
-  • CIE = Viva + Final_Lab (max 50)
-  • Minimum to pass: CIE ≥ 20
-
-═══ SGPA CALCULATION ═══
-  SGPA = Σ(Grade_Points × Credits) / Σ(Credits)   [for eligible courses only]
-
-  Grade scale (based on final score = CIE + SEE/2, capped at 100):
-  Score ≥ 90 → O  (10 pts)
-  Score ≥ 80 → A+ (9 pts)
-  Score ≥ 70 → A  (8 pts)
-  Score ≥ 60 → B+ (7 pts)
-  Score ≥ 55 → B  (6 pts)
-  Score ≥ 50 → C  (5 pts)
-  Score ≥ 45 → P  (4 pts)
-  Score < 45 → F  (0 pts, fail)
-
-═══ KEY RULES ═══
-  • Student must score ≥ 20/50 in CIE to sit for SEE (Semester End Exam).
-  • SEE is out of 100; it contributes 50% of the final score (SEE/2).
-  • LA tests are conducted by the faculty within the department.
-  • MSE (Mid-Semester Exam) is conducted centrally.
-  • Only the best of MSE1 and MSE2 is considered.
-
-═══ ABOUT THE APP ═══
-  • Load branch/semester presets to auto-fill course list.
-  • Add Non-Integrated, Integrated, or Lab-Only courses manually.
-  • Use the Target Score Calculator (button on each course card) to find what you need in remaining components.
-  • Export a PDF report or share a result card image.
-  • Undo/redo support for all changes.
-  • Data is auto-saved in your browser's localStorage.
-
-If a question is unrelated to NMIT academics or the CIE Hub app, politely say you can only help with CIE/SGPA topics.`;
-
-  // ── Toggle open/close ──────────────────────────────────────────────────────
+  // ── Toggle open/close ───────────────────────────────────────────────────────
   function togglePanel() {
     isOpen = !isOpen;
     panel.classList.toggle('open', isOpen);
     fab.classList.toggle('open', isOpen);
     panel.setAttribute('aria-hidden', String(!isOpen));
     if (isOpen) {
-      if (chatHistory.length === 0) addBotMessage("Hi! 👋 I'm your CIE Assistant. Ask me anything about CIE marks, SGPA, eligibility, or how to use this app.");
+      const msgs = msgArea.querySelectorAll('.chat-msg');
+      if (msgs.length === 0) {
+        addBotMessage("Hi! 👋 I'm your CIE Assistant. Ask me anything about CIE marks, SGPA, eligibility, or how to use this app.");
+      }
       setTimeout(() => input.focus(), 250);
     }
   }
 
   fab.addEventListener('click', togglePanel);
   closeBtn.addEventListener('click', togglePanel);
-
-  // Close on outside click
   document.addEventListener('click', e => {
     if (isOpen && !panel.contains(e.target) && !fab.contains(e.target)) togglePanel();
   });
 
-  // ── Message rendering ──────────────────────────────────────────────────────
+  // ── Rendering helpers ───────────────────────────────────────────────────────
   function scrollBottom() {
     msgArea.scrollTo({ top: msgArea.scrollHeight, behavior: 'smooth' });
+  }
+
+  function escapeHtml(str) {
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function formatText(text) {
+    return escapeHtml(text)
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\n/g, '<br>');
   }
 
   function addUserMessage(text) {
@@ -2720,10 +2789,9 @@ If a question is unrelated to NMIT academics or the CIE Hub app, politely say yo
   function addBotMessage(text) {
     const div = document.createElement('div');
     div.className = 'chat-msg bot';
-    div.innerHTML = `<div class="chat-bubble">${formatBotText(text)}</div>`;
+    div.innerHTML = `<div class="chat-bubble">${formatText(text)}</div>`;
     msgArea.appendChild(div);
     scrollBottom();
-    return div;
   }
 
   function showTyping() {
@@ -2740,93 +2808,37 @@ If a question is unrelated to NMIT academics or the CIE Hub app, politely say yo
     if (el) el.remove();
   }
 
-  function escapeHtml(str) {
-    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
-
-  function formatBotText(text) {
-    // Bold **text** and line breaks
-    return escapeHtml(text)
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\n/g, '<br>');
-  }
-
-  // ── Suggestion chips ───────────────────────────────────────────────────────
+  // ── Suggestion chips ────────────────────────────────────────────────────────
   chipsWrap.querySelectorAll('.chatbot-chip').forEach(chip => {
     chip.addEventListener('click', () => {
-      const q = chip.dataset.q;
-      chipsWrap.style.display = 'none'; // hide chips after first use
-      sendMessage(q);
+      chipsWrap.style.display = 'none';
+      sendMessage(chip.dataset.q);
     });
   });
 
-  // ── Send logic ─────────────────────────────────────────────────────────────
-  async function sendMessage(text) {
+  // ── Send ────────────────────────────────────────────────────────────────────
+  function sendMessage(text) {
     text = (text || input.value).trim();
-    if (!text || isLoading) return;
+    if (!text) return;
 
     input.value = '';
     resizeInput();
     chipsWrap.style.display = 'none';
     addUserMessage(text);
-    chatHistory.push({ role: 'user', content: text });
 
-    isLoading = true;
-    sendBtn.disabled = true;
     showTyping();
-
-    try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-6',
-          max_tokens: 1000,
-          system: SYSTEM_PROMPT,
-          messages: chatHistory
-        })
-      });
-
-      const data = await response.json();
+    // Small delay so it feels like thinking
+    setTimeout(() => {
       removeTyping();
-
-      if (!response.ok || data.error) {
-        console.error('Chatbot API error:', data.error || response.status);
-        addBotMessage('Sorry, something went wrong. Please try again.');
-        chatHistory.pop(); // remove the user message if failed
-      } else {
-        const reply = data.content
-          .filter(b => b.type === 'text')
-          .map(b => b.text)
-          .join('');
-        chatHistory.push({ role: 'assistant', content: reply });
-        addBotMessage(reply);
-      }
-    } catch (err) {
-      removeTyping();
-      addBotMessage('Network error. Please check your connection and try again.');
-      chatHistory.pop();
-    } finally {
-      isLoading = false;
-      sendBtn.disabled = false;
-      input.focus();
-    }
+      addBotMessage(getBotReply(text));
+    }, 420);
   }
 
   sendBtn.addEventListener('click', () => sendMessage());
-
   input.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
   });
 
-  // Auto-resize textarea
   function resizeInput() {
     input.style.height = 'auto';
     input.style.height = Math.min(input.scrollHeight, 100) + 'px';
