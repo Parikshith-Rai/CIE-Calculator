@@ -234,6 +234,25 @@
       font-size: 0.75rem;
       color: var(--text-muted);
     }
+
+    /* Suggested actions */
+    .suggestions { margin-bottom: 1.5rem; text-align: left; }
+    .suggestions-title {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-muted);
+      margin-bottom: 0.65rem;
+    }
+    .suggestion-list { display: flex; flex-direction: column; gap: 0.45rem; }
+    .suggestion-item {
+      display: flex; align-items: flex-start; gap: 0.65rem;
+      background: var(--bg-secondary); border: 1px solid var(--card-border);
+      border-radius: 10px; padding: 0.65rem 0.85rem;
+      font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4;
+      transition: border-color 0.15s;
+    }
+    .suggestion-item:hover { border-color: var(--accent-primary); }
+    .suggestion-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+    .suggestion-text strong { display: block; color: var(--text-primary); font-size: 0.83rem; margin-bottom: 1px; }
   </style>
 </head>
 <body>
@@ -279,6 +298,41 @@
         <span class="dot dot-green"></span>
         <span class="status-label">Local data</span>
         <span>Safe in browser</span>
+      </div>
+    </div>
+
+    <!-- Suggested actions -->
+    <div class="suggestions">
+      <div class="suggestions-title">What you can do</div>
+      <div class="suggestion-list">
+        <div class="suggestion-item">
+          <span class="suggestion-icon">📶</span>
+          <div class="suggestion-text">
+            <strong>Check your Wi-Fi or mobile data</strong>
+            Make sure you're connected to the internet — try opening another website to confirm.
+          </div>
+        </div>
+        <div class="suggestion-item">
+          <span class="suggestion-icon">🔄</span>
+          <div class="suggestion-text">
+            <strong>Restart your router</strong>
+            Turn it off, wait 10 seconds, then turn it back on.
+          </div>
+        </div>
+        <div class="suggestion-item">
+          <span class="suggestion-icon">✈️</span>
+          <div class="suggestion-text">
+            <strong>Toggle Airplane mode</strong>
+            On mobile, switching Airplane mode on and off can reset the connection quickly.
+          </div>
+        </div>
+        <div class="suggestion-item">
+          <span class="suggestion-icon">💾</span>
+          <div class="suggestion-text">
+            <strong>Your data is safe</strong>
+            All your CIE marks are stored locally in your browser — nothing is lost.
+          </div>
+        </div>
       </div>
     </div>
 
