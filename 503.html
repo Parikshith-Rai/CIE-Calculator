@@ -127,6 +127,23 @@
     .btn-primary.loading .spinner { display:block; }
     .btn-primary.loading .lbl { display:none; }
     footer { margin-top: 2rem; font-size: 0.75rem; color: var(--text-muted); }
+
+    .suggestions { margin-bottom: 1.5rem; text-align: left; }
+    .suggestions-title {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.65rem;
+    }
+    .suggestion-list { display: flex; flex-direction: column; gap: 0.45rem; }
+    .suggestion-item {
+      display: flex; align-items: flex-start; gap: 0.65rem;
+      background: var(--bg-secondary); border: 1px solid var(--card-border);
+      border-radius: 10px; padding: 0.65rem 0.85rem;
+      font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4;
+      transition: border-color 0.15s;
+    }
+    .suggestion-item:hover { border-color: var(--accent-primary); }
+    .suggestion-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+    .suggestion-text strong { display: block; color: var(--text-primary); font-size: 0.83rem; margin-bottom: 1px; }
   </style>
 </head>
 <body>
@@ -159,6 +176,34 @@
         <div class="progress-fill" id="progFill"></div>
       </div>
       <div class="progress-note">Estimated time: a few minutes</div>
+    </div>
+
+    <!-- Suggested actions -->
+    <div class="suggestions">
+      <div class="suggestions-title">What you can do</div>
+      <div class="suggestion-list">
+        <div class="suggestion-item">
+          <span class="suggestion-icon">☕</span>
+          <div class="suggestion-text">
+            <strong>Take a short break</strong>
+            Maintenance usually finishes within a few minutes — come back shortly.
+          </div>
+        </div>
+        <div class="suggestion-item">
+          <span class="suggestion-icon">🔔</span>
+          <div class="suggestion-text">
+            <strong>Check for announcements</strong>
+            Look for updates from NMIT or the app developer about the maintenance window.
+          </div>
+        </div>
+        <div class="suggestion-item">
+          <span class="suggestion-icon">💾</span>
+          <div class="suggestion-text">
+            <strong>Your data is untouched</strong>
+            All your CIE marks and SGPA data are saved locally — nothing will be lost.
+          </div>
+        </div>
+      </div>
     </div>
 
     <div class="actions">
