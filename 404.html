@@ -188,6 +188,27 @@
       font-size: 0.75rem;
       color: var(--text-muted);
     }
+
+    /* Suggested actions */
+    .suggestions { margin-bottom: 2rem; text-align: left; }
+    .suggestions-title {
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--text-muted);
+      margin-bottom: 0.65rem;
+    }
+    .suggestion-list { display: flex; flex-direction: column; gap: 0.45rem; }
+    .suggestion-item {
+      display: flex; align-items: flex-start; gap: 0.65rem;
+      background: var(--bg-secondary); border: 1px solid var(--card-border);
+      border-radius: 10px; padding: 0.65rem 0.85rem;
+      font-size: 0.82rem; color: var(--text-secondary); line-height: 1.4;
+      cursor: default; transition: border-color 0.15s;
+    }
+    .suggestion-item:hover { border-color: var(--accent-primary); }
+    .suggestion-icon {
+      font-size: 1rem; flex-shrink: 0; margin-top: 1px;
+    }
+    .suggestion-text strong { display: block; color: var(--text-primary); font-size: 0.83rem; margin-bottom: 1px; }
   </style>
 </head>
 <body>
@@ -210,6 +231,34 @@
     <div class="badge">Page not found</div>
     <h1>Nothing here but empty marks</h1>
     <p>The page you're looking for doesn't exist or may have been moved. Double-check the URL, or head back to the CIE Hub to get back on track.</p>
+
+    <!-- Suggested actions -->
+    <div class="suggestions">
+      <div class="suggestions-title">What you can do</div>
+      <div class="suggestion-list">
+        <div class="suggestion-item">
+          <span class="suggestion-icon">🔗</span>
+          <div class="suggestion-text">
+            <strong>Check the URL</strong>
+            Make sure the address is spelled correctly — a typo is the most common cause.
+          </div>
+        </div>
+        <div class="suggestion-item">
+          <span class="suggestion-icon">🏠</span>
+          <div class="suggestion-text">
+            <strong>Go to the homepage</strong>
+            Head back to the CIE Hub and navigate from there.
+          </div>
+        </div>
+        <div class="suggestion-item">
+          <span class="suggestion-icon">↩️</span>
+          <div class="suggestion-text">
+            <strong>Use your browser's back button</strong>
+            The page you were on before is probably still available.
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="actions">
       <a href="index.html" class="btn btn-primary">
