@@ -2845,3 +2845,236 @@ function openTargetScoreModal(course) {
   }
   input.addEventListener('input', resizeInput);
 })();
+/* ==========================================================================
+   SGPA LEADERBOARD
+   ========================================================================== */
+(function () {
+  const btnLB     = document.getElementById('btn-leaderboard');
+  const modal     = document.getElementById('leaderboard-modal');
+  const btnClose  = document.getElementById('btn-close-leaderboard');
+
+  // Enable/disable button whenever savedSemesters changes
+  // Patch into renderSavedSemesters by polling — lightweight and non-invasive
+  setInterval(() => {
+    if (btnLB) btnLB.disabled = (typeof savedSemesters === 'undefined' || savedSemesters.length < 1);
+  }, 400);
+
+  if (btnClose) btnClose.addEventListener('click', () => modal.close());
+  modal && modal.addEventListener('click', e => { if (e.target === modal) modal.close(); });
+
+  if (btnLB) btnLB.addEventListener('click', openLeaderboard);
+
+  function openLeaderboard() {
+    if (!savedSemesters || savedSemesters.length === 0) return;
+
+    const sems = [...savedSemesters]; // chronological order (save order)
+
+    // ── Stats row ─────────────────────────────────────────────────────────────
+    const sgpas     = sems.map(s => s.sgpa);
+    const best      = Math.max(...sgpas);
+    const avg       = (sgpas.reduce((a, b) => a + b, 0) / sgpas.length).toFixed(2);
+    const trend     = sgpas.length >= 2 ? (sgpas[sgpas.length - 1] - sgpas[sgpas.length - 2]).toFixed(2) : null;
+    const trendSign = trend !== null ? (parseFloat(trend) > 0 ? '+' : '') : '';
+
+    document.getElementById('lb-stats-row').innerHTML = `
+      <div class="lb-stat-card">
+        <div class="lb-stat-value gold">${best.toFixed(2)}</div>
+        <div class="lb-stat-label">Best SGPA</div>
+      </div>
+      <div class="lb-stat-card">
+        <div class="lb-stat-value green">${avg}</div>
+        <div class="lb-stat-label">Average SGPA</div>
+      </div>
+      <div class="lb-stat-card">
+        <div class="lb-stat-value purple">${trend !== null ? trendSign + trend : '—'}</div>
+        <div class="lb-stat-label">Latest Trend</div>
+      </div>
+    `;
+
+    // ── SVG Timeline Chart ─────────────────────────────────────────────────────
+    drawChart(sems);
+
+    // ── Ranked list (sorted best → worst) ─────────────────────────────────────
+    const ranked = [...sems].sort((a, b) => b.sgpa - a.sgpa);
+    const list   = document.getElementById('lb-ranked-list');
+    list.innerHTML = '';
+
+    const medals  = ['🥇', '🥈', '🥉'];
+    const classes = ['gold', 'silver', 'bronze'];
+
+    ranked.forEach((sem, i) => {
+      // Trend vs previous semester in chronological order
+      const chronoIdx = sems.indexOf(sem);
+      const prevSem   = sems[chronoIdx - 1];
+      let trendHtml   = '';
+
+      if (chronoIdx === 0) {
+        trendHtml = `<span class="lb-trend-pill same">📍 Starting point</span>`;
+      } else if (prevSem) {
+        const diff     = parseFloat((sem.sgpa - prevSem.sgpa).toFixed(2));
+        const absDiff  = Math.abs(diff).toFixed(2);
+        if (diff > 0) {
+          trendHtml = `<span class="lb-trend-pill up">▲ +${absDiff} from ${prevSem.name}</span>`;
+        } else if (diff < 0) {
+          trendHtml = `<span class="lb-trend-pill down">▼ −${absDiff} from ${prevSem.name}</span>`;
+        } else {
+          trendHtml = `<span class="lb-trend-pill same">= No change from ${prevSem.name}</span>`;
+        }
+      }
+
+      const cls        = classes[i] || 'normal';
+      const badgeCls   = `lb-badge lb-badge-${cls}`;
+      const badgeLabel = medals[i] || `#${i + 1}`;
+      const barColor   = i === 0 ? '#f59e0b' : i === 1 ? '#94a3b8' : i === 2 ? '#b45309' : 'var(--accent-primary)';
+      const barWidth   = ((sem.sgpa / 10) * 100).toFixed(1);
+
+      const div = document.createElement('div');
+      div.className = 'lb-rank-item';
+      div.style.animationDelay = `${i * 0.06}s`;
+      div.innerHTML = `
+        <div class="${badgeCls}">${badgeLabel}</div>
+        <div class="lb-rank-info">
+          <div class="lb-rank-name-row">
+            <span class="lb-rank-name">${sem.name}</span>
+            ${trendHtml}
+          </div>
+          <div class="lb-rank-meta">${sem.totalCredits} credits · Avg CIE ${sem.avgCie}/50</div>
+          <div class="lb-rank-bar-wrap">
+            <div class="lb-rank-bar" style="width:0%; background:${barColor}" data-w="${barWidth}%"></div>
+          </div>
+        </div>
+        <div class="lb-rank-right">
+          <div class="lb-rank-sgpa ${cls}">${sem.sgpa.toFixed(2)}</div>
+          <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">/ 10.00</div>
+        </div>
+      `;
+      list.appendChild(div);
+    });
+
+    // Animate bars after paint
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        list.querySelectorAll('.lb-rank-bar').forEach(bar => {
+          bar.style.width = bar.dataset.w;
+        });
+      });
+    });
+
+    modal.showModal();
+  }
+
+  function drawChart(sems) {
+    const svg    = document.getElementById('lb-svg');
+    svg.innerHTML = '';
+
+    const W      = Math.max(sems.length * 90, 320);
+    const H      = 160;
+    const PAD    = { top: 20, right: 30, bottom: 36, left: 38 };
+    const cW     = W - PAD.left - PAD.right;
+    const cH     = H - PAD.top  - PAD.bottom;
+
+    svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+    svg.setAttribute('width',  W);
+    svg.setAttribute('height', H);
+
+    // CSS variables resolved at runtime
+    const style    = getComputedStyle(document.documentElement);
+    const colText  = style.getPropertyValue('--text-muted').trim()   || '#888';
+    const colBord  = style.getPropertyValue('--card-border').trim()  || '#333';
+    const colAccent= style.getPropertyValue('--accent-primary').trim()|| '#3b82f6';
+
+    const minSGPA  = Math.max(0, Math.min(...sems.map(s => s.sgpa)) - 0.5);
+    const maxSGPA  = Math.min(10, Math.max(...sems.map(s => s.sgpa)) + 0.5);
+    const range    = maxSGPA - minSGPA || 1;
+
+    function xOf(i) { return PAD.left + (i / (sems.length - 1 || 1)) * cW; }
+    function yOf(v) { return PAD.top  + (1 - (v - minSGPA) / range) * cH; }
+
+    // Horizontal grid lines
+    const steps = [minSGPA, (minSGPA + maxSGPA) / 2, maxSGPA];
+    steps.forEach(v => {
+      const y = yOf(v);
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', PAD.left); line.setAttribute('x2', PAD.left + cW);
+      line.setAttribute('y1', y);        line.setAttribute('y2', y);
+      line.setAttribute('stroke', colBord); line.setAttribute('stroke-width', '1');
+      line.setAttribute('stroke-dasharray', '4 3'); line.setAttribute('opacity', '0.5');
+      svg.appendChild(line);
+
+      const txt = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      txt.setAttribute('x', PAD.left - 5); txt.setAttribute('y', y + 4);
+      txt.setAttribute('text-anchor', 'end'); txt.setAttribute('font-size', '9');
+      txt.setAttribute('fill', colText); txt.textContent = v.toFixed(1);
+      svg.appendChild(txt);
+    });
+
+    // Area fill under line
+    if (sems.length > 1) {
+      const pts  = sems.map((s, i) => `${xOf(i)},${yOf(s.sgpa)}`).join(' ');
+      const last = sems.length - 1;
+      const area = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+      area.setAttribute('points',
+        `${xOf(0)},${PAD.top + cH} ${pts} ${xOf(last)},${PAD.top + cH}`);
+      area.setAttribute('fill', colAccent); area.setAttribute('opacity', '0.08');
+      svg.appendChild(area);
+
+      // Polyline
+      const polyline = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+      polyline.setAttribute('points', pts);
+      polyline.setAttribute('fill', 'none');
+      polyline.setAttribute('stroke', colAccent);
+      polyline.setAttribute('stroke-width', '2.5');
+      polyline.setAttribute('stroke-linejoin', 'round');
+      polyline.setAttribute('stroke-linecap', 'round');
+      svg.appendChild(polyline);
+    }
+
+    // Dots, value labels, x-axis labels
+    sems.forEach((sem, i) => {
+      const x = xOf(i);
+      const y = yOf(sem.sgpa);
+      const isBest = sem.sgpa === Math.max(...sems.map(s => s.sgpa));
+
+      // Dot
+      const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      circle.setAttribute('cx', x); circle.setAttribute('cy', y);
+      circle.setAttribute('r', isBest ? '6' : '4.5');
+      circle.setAttribute('fill', isBest ? '#f59e0b' : colAccent);
+      circle.setAttribute('stroke', 'var(--card-bg)'); circle.setAttribute('stroke-width', '2');
+      svg.appendChild(circle);
+
+      // Value label above dot
+      const val = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      val.setAttribute('x', x); val.setAttribute('y', y - 10);
+      val.setAttribute('text-anchor', 'middle'); val.setAttribute('font-size', '9.5');
+      val.setAttribute('font-weight', '700');
+      val.setAttribute('fill', isBest ? '#f59e0b' : colAccent);
+      val.textContent = sem.sgpa.toFixed(2);
+      svg.appendChild(val);
+
+      // X-axis label
+      const lbl = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      lbl.setAttribute('x', x); lbl.setAttribute('y', H - 6);
+      lbl.setAttribute('text-anchor', 'middle'); lbl.setAttribute('font-size', '9');
+      lbl.setAttribute('fill', colText);
+      // Truncate long names
+      lbl.textContent = sem.name.length > 10 ? sem.name.slice(0, 9) + '…' : sem.name;
+      svg.appendChild(lbl);
+    });
+
+    // Trend arrow at the end if >= 2 sems
+    if (sems.length >= 2) {
+      const last  = sems[sems.length - 1];
+      const prev  = sems[sems.length - 2];
+      const up    = last.sgpa >= prev.sgpa;
+      const arrX  = xOf(sems.length - 1) + 12;
+      const arrY  = yOf(last.sgpa);
+      const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      arrow.setAttribute('x', arrX); arrow.setAttribute('y', arrY + 4);
+      arrow.setAttribute('font-size', '11'); arrow.setAttribute('font-weight', '700');
+      arrow.setAttribute('fill', up ? '#34d399' : '#f87171');
+      arrow.textContent = up ? '▲' : '▼';
+      svg.appendChild(arrow);
+    }
+  }
+})();

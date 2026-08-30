@@ -2306,3 +2306,181 @@ body {
   .chatbot-panel { width: calc(100vw - 2rem); right: 1rem; bottom: calc(1rem + 52px + 0.75rem); }
   .chatbot-fab   { right: 1rem; bottom: 1rem; }
 }
+/* ============================================================
+   SGPA LEADERBOARD MODAL
+   ============================================================ */
+
+.leaderboard-dialog { max-width: 600px !important; }
+.leaderboard-dialog .modal-content { max-height: 90vh; overflow-y: auto; }
+
+/* Summary stats row */
+.lb-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.6rem;
+  margin: 1rem 0 1.2rem;
+}
+.lb-stat-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 0.75rem 0.6rem;
+  text-align: center;
+}
+.lb-stat-value {
+  font-family: var(--font-title);
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--accent-primary);
+}
+.lb-stat-value.gold   { color: #f59e0b; }
+.lb-stat-value.green  { color: #34d399; }
+.lb-stat-value.purple { color: #a78bfa; }
+.lb-stat-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 0.2rem;
+}
+
+/* Chart */
+.lb-chart-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  margin-bottom: 0.5rem;
+}
+.lb-chart-wrap { margin-bottom: 1.4rem; }
+.lb-chart-scroll { overflow-x: auto; }
+.lb-svg { display: block; min-width: 100%; height: 180px; overflow: visible; }
+
+/* Ranked list */
+.lb-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+  margin-bottom: 0.65rem;
+}
+.lb-ranked-list { display: flex; flex-direction: column; gap: 0.5rem; }
+
+.lb-rank-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  transition: border-color 0.15s;
+  animation: lbFadeIn 0.3s ease both;
+}
+.lb-rank-item:hover { border-color: var(--accent-primary); }
+@keyframes lbFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.lb-badge {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.lb-badge-gold   { background: rgba(245,158,11,0.15); color: #f59e0b; }
+.lb-badge-silver { background: rgba(148,163,184,0.15); color: #94a3b8; }
+.lb-badge-bronze { background: rgba(180,83,9,0.15);   color: #b45309; }
+.lb-badge-normal { background: var(--card-border); color: var(--text-muted); font-size: 0.85rem; }
+
+.lb-rank-info { flex: 1; min-width: 0; }
+.lb-rank-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.lb-rank-meta {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.lb-rank-right { text-align: right; flex-shrink: 0; }
+.lb-rank-sgpa {
+  font-family: var(--font-title);
+  font-size: 1.25rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.lb-rank-sgpa.gold   { color: #f59e0b; }
+.lb-rank-sgpa.silver { color: #94a3b8; }
+.lb-rank-sgpa.bronze { color: #b45309; }
+.lb-rank-sgpa.normal { color: var(--accent-primary); }
+
+.lb-trend {
+  font-size: 0.72rem;
+  font-weight: 600;
+  margin-top: 2px;
+}
+.lb-trend.up   { color: #34d399; }
+.lb-trend.down { color: #f87171; }
+.lb-trend.same { color: var(--text-muted); }
+
+/* SGPA bar inside rank item */
+.lb-rank-bar-wrap {
+  flex: 1;
+  height: 6px;
+  background: var(--card-border);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.lb-rank-bar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.7s cubic-bezier(.4,0,.2,1);
+}
+
+/* Trend pill inside leaderboard rank items */
+.lb-rank-name-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 2px;
+}
+.lb-trend-pill {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15em 0.55em;
+  border-radius: 999px;
+  white-space: nowrap;
+  letter-spacing: 0.01em;
+}
+.lb-trend-pill.up {
+  background: rgba(52,211,153,0.15);
+  color: #34d399;
+  border: 1px solid rgba(52,211,153,0.3);
+}
+.lb-trend-pill.down {
+  background: rgba(248,113,113,0.15);
+  color: #f87171;
+  border: 1px solid rgba(248,113,113,0.3);
+}
+.lb-trend-pill.same {
+  background: rgba(148,163,184,0.12);
+  color: var(--text-muted);
+  border: 1px solid var(--card-border);
+}

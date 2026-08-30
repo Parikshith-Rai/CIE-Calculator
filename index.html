@@ -222,7 +222,7 @@
           <!-- Dynamically populated saved semesters -->
         </div>
 
-        <div class="sidebar-actions" style="margin-top: 1rem;">
+        <div class="sidebar-actions" style="margin-top: 1rem; display: flex; flex-direction: column; gap: 0.5rem;">
           <button id="btn-compare-semesters" class="btn-secondary w-full" disabled>
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="20" x2="18" y2="10"></line>
@@ -230,6 +230,12 @@
               <line x1="6" y1="20" x2="6" y2="14"></line>
             </svg>
             Compare Semesters
+          </button>
+          <button id="btn-leaderboard" class="btn-secondary w-full" disabled>
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+            </svg>
+            🏆 SGPA Leaderboard
           </button>
         </div>
       </section>
@@ -457,6 +463,39 @@
             <button type="submit" class="btn-primary">Save Guidelines</button>
           </div>
         </form>
+      </div>
+    </div>
+  </dialog>
+
+  <!-- Leaderboard Modal -->
+  <dialog id="leaderboard-modal" class="modal-dialog leaderboard-dialog">
+    <div class="modal-content glass-card">
+      <div class="modal-header">
+        <h2>🏆 SGPA Leaderboard</h2>
+        <button id="btn-close-leaderboard" class="btn-icon" aria-label="Close modal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body" style="padding-top: 0;">
+
+        <!-- Summary stats row -->
+        <div id="lb-stats-row" class="lb-stats-row"></div>
+
+        <!-- SVG Timeline Chart -->
+        <div class="lb-chart-wrap">
+          <div class="lb-chart-label">SGPA Timeline</div>
+          <div class="lb-chart-scroll">
+            <svg id="lb-svg" class="lb-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+          </div>
+        </div>
+
+        <!-- Ranked list -->
+        <div class="lb-section-label">Rankings</div>
+        <div id="lb-ranked-list" class="lb-ranked-list"></div>
+
       </div>
     </div>
   </dialog>
