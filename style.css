@@ -2484,3 +2484,110 @@ body {
   color: var(--text-muted);
   border: 1px solid var(--card-border);
 }
+
+/* ============================================================
+   STRESS METER
+   ============================================================ */
+.stress-meter-card { position: relative; overflow: hidden; }
+
+.stress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.2rem;
+}
+.stress-emoji {
+  font-size: 1.9rem;
+  line-height: 1;
+  transition: transform 0.3s cubic-bezier(.4,0,.2,1);
+  display: inline-block;
+}
+.stress-emoji.bounce {
+  animation: stressBounce 0.4s cubic-bezier(.4,0,.2,1);
+}
+@keyframes stressBounce {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.35) rotate(-8deg); }
+  70%  { transform: scale(0.92) rotate(4deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* Bar track */
+.stress-bar-track {
+  position: relative;
+  height: 14px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--card-border);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 0.75rem 0 0.35rem;
+}
+.stress-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.7s cubic-bezier(.4,0,.2,1), background 0.5s ease;
+  position: relative;
+  z-index: 1;
+}
+/* Animated shine overlay */
+.stress-bar-shine {
+  position: absolute;
+  top: 0; left: -60%;
+  width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18), transparent);
+  animation: stressShine 2.2s ease-in-out infinite;
+  z-index: 2;
+}
+@keyframes stressShine {
+  0%   { left: -60%; }
+  100% { left: 110%; }
+}
+
+.stress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+/* Breakdown pills */
+.stress-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  min-height: 0;
+  transition: all 0.3s;
+}
+.stress-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.22em 0.65em;
+  border-radius: 999px;
+  animation: pillPop 0.25s cubic-bezier(.4,0,.2,1) both;
+}
+@keyframes pillPop {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.stress-pill-danger {
+  background: rgba(239,68,68,0.12);
+  color: #f87171;
+  border: 1px solid rgba(239,68,68,0.25);
+}
+.stress-pill-warning {
+  background: rgba(245,158,11,0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(245,158,11,0.25);
+}
+.stress-pill-ok {
+  background: rgba(52,211,153,0.1);
+  color: #34d399;
+  border: 1px solid rgba(52,211,153,0.2);
+}

@@ -1419,6 +1419,7 @@ function renderSidebar() {
     const arcReset = document.getElementById('sgpa-gauge-arc');
     if (arcReset) arcReset.style.strokeDasharray = '0 283';
     sgpaBreakdownList.innerHTML = '<p class="card-desc text-center" style="margin: 0">Add courses to see GPA breakdown</p>';
+    updateStressMeter(0, 0, 0);
     return;
   }
   
@@ -1462,6 +1463,7 @@ function renderSidebar() {
   }
   
   updateSidebarSgpaList();
+  updateStressMeter(ineligibleCount, warningCount, courses.length);
 }
 
 function updateSidebarSgpaList() {
@@ -3078,3 +3080,81 @@ function openTargetScoreModal(course) {
     }
   }
 })();
+
+/* ==========================================================================
+   STRESS METER
+   ========================================================================== */
+function updateStressMeter(ineligible, warning, total) {
+  const fill     = document.getElementById('stress-bar-fill');
+  const emoji    = document.getElementById('stress-emoji');
+  const tagline  = document.getElementById('stress-tagline');
+  const breakdown= document.getElementById('stress-breakdown');
+  if (!fill || !emoji || !tagline || !breakdown) return;
+
+  if (total === 0) {
+    fill.style.width = '0%';
+    fill.style.background = 'var(--card-border)';
+    emoji.textContent = '😴';
+    tagline.textContent = 'Add courses to see your stress level.';
+    breakdown.innerHTML = '';
+    return;
+  }
+
+  // Stress score: ineligible courses count double, warning once
+  // Max score = all courses ineligible (weight 2 each)
+  const score   = (ineligible * 2 + warning * 1);
+  const maxScore = total * 2;
+  const pct     = Math.min(100, Math.round((score / maxScore) * 100));
+  const safe    = total - ineligible - warning;
+
+  // Color gradient: green → yellow → orange → red
+  let color, emojiChar, message;
+  if (pct === 0) {
+    color = '#34d399'; emojiChar = '😎';
+    message = 'All clear! Every course is eligible. Keep it up!';
+  } else if (pct <= 20) {
+    color = '#6ee7b7'; emojiChar = '🙂';
+    message = 'Mostly fine. A couple of courses need attention.';
+  } else if (pct <= 40) {
+    color = '#fbbf24'; emojiChar = '😅';
+    message = 'Getting a bit dicey. Time to hit the books.';
+  } else if (pct <= 60) {
+    color = '#f97316'; emojiChar = '😬';
+    message = 'Stress is real. Several courses are at risk!';
+  } else if (pct <= 80) {
+    color = '#ef4444'; emojiChar = '😰';
+    message = 'High alert! Most courses need urgent attention.';
+  } else {
+    color = '#b91c1c'; emojiChar = '🔥';
+    message = 'Code red. Almost everything is at risk — go study NOW!';
+  }
+
+  // Animate bar
+  fill.style.width   = pct + '%';
+  fill.style.background = color;
+
+  // Bounce emoji if it changed
+  if (emoji.textContent !== emojiChar) {
+    emoji.textContent = emojiChar;
+    emoji.classList.remove('bounce');
+    void emoji.offsetWidth; // reflow
+    emoji.classList.add('bounce');
+  }
+
+  tagline.textContent = message;
+
+  // Breakdown pills
+  breakdown.innerHTML = '';
+  const pills = [];
+  if (ineligible > 0) pills.push({ cls: 'stress-pill-danger', icon: '🚨', label: `${ineligible} Ineligible` });
+  if (warning   > 0) pills.push({ cls: 'stress-pill-warning', icon: '⚠️', label: `${warning} Warning` });
+  if (safe      > 0) pills.push({ cls: 'stress-pill-ok',      icon: '✅', label: `${safe} Safe` });
+
+  pills.forEach((p, i) => {
+    const span = document.createElement('span');
+    span.className = `stress-pill ${p.cls}`;
+    span.style.animationDelay = `${i * 0.07}s`;
+    span.innerHTML = `${p.icon} ${p.label}`;
+    breakdown.appendChild(span);
+  });
+}
