@@ -1460,6 +1460,7 @@ function renderSidebar() {
   } else {
     eligibilityStatusSpan.innerText = 'All Eligible';
     eligibilityStatusSpan.className = 'status-badge status-good';
+    triggerEligibilityConfetti();
   }
   
   updateSidebarSgpaList();
@@ -1544,6 +1545,7 @@ function calculateSGPA() {
   
   const sgpa = totalCredits > 0 ? (totalGradePoints / totalCredits) : 0.00;
   sgpaScoreSpan.innerText = sgpa.toFixed(2);
+  triggerSGPAConfetti(sgpa);
   
   // Set SGPA progress bar fill (10 is max GPA)
   const barPercent = (sgpa / 10) * 100;
@@ -3158,3 +3160,167 @@ function updateStressMeter(ineligible, warning, total) {
     breakdown.appendChild(span);
   });
 }
+
+/* ==========================================================================
+   CONFETTI ENGINE
+   ========================================================================== */
+(function () {
+  // ── State tracking (prevent repeat fires) ─────────────────────────────────
+  let _wasAllEligible   = false;
+  let _lastSGPAMilestone = 0;
+
+  // Expose trigger functions globally
+  window.triggerEligibilityConfetti = function () {
+    if (_wasAllEligible) return;          // already celebrated
+    _wasAllEligible = true;
+    launchConfetti({ count: 90, duration: 2800, origin: { x: 0.5, y: 0.6 } });
+    showConfettiToast('🎉 All courses eligible!', 'Nice — you cleared every CIE threshold!');
+  };
+
+  window.triggerSGPAConfetti = function (sgpa) {
+    // Reset eligibility flag if things get bad again
+    if (courses.some(c => calculateCourseCIE(c) < 20)) _wasAllEligible = false;
+
+    const milestones = [
+      { val: 9.0, label: '🌟 SGPA 9.0+!',  sub: 'Outstanding! You\'re in the top tier.' },
+      { val: 8.0, label: '🏅 SGPA 8.0+!',  sub: 'Distinction range — brilliant work!' },
+      { val: 7.0, label: '✨ SGPA 7.0+!',  sub: 'First class! Great performance.' },
+    ];
+
+    for (const m of milestones) {
+      if (sgpa >= m.val && _lastSGPAMilestone < m.val) {
+        _lastSGPAMilestone = m.val;
+        const intensity = m.val >= 9 ? 160 : m.val >= 8 ? 120 : 80;
+        launchConfetti({ count: intensity, duration: 3200, origin: { x: 0.5, y: 0.5 } });
+        showConfettiToast(m.label, m.sub);
+        return;
+      }
+    }
+
+    // Reset milestone if SGPA drops below a milestone
+    for (const m of [9, 8, 7]) {
+      if (sgpa < m && _lastSGPAMilestone >= m) {
+        _lastSGPAMilestone = [9, 8, 7].filter(v => sgpa >= v)[0] || 0;
+      }
+    }
+  };
+
+  // ── Canvas confetti launcher ───────────────────────────────────────────────
+  function launchConfetti({ count = 100, duration = 3000, origin = { x: 0.5, y: 0.5 } }) {
+    const canvas = document.createElement('canvas');
+    canvas.style.cssText = `
+      position:fixed; top:0; left:0; width:100%; height:100%;
+      pointer-events:none; z-index:99999;
+    `;
+    document.body.appendChild(canvas);
+
+    const ctx = canvas.getContext('2d');
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const COLORS = [
+      '#f59e0b','#34d399','#60a5fa','#f87171',
+      '#a78bfa','#fb923c','#38bdf8','#4ade80','#f472b6'
+    ];
+
+    const particles = Array.from({ length: count }, () => ({
+      x:  canvas.width  * origin.x + (Math.random() - 0.5) * 80,
+      y:  canvas.height * origin.y + (Math.random() - 0.5) * 40,
+      vx: (Math.random() - 0.5) * 9,
+      vy: -(Math.random() * 8 + 4),
+      size:   Math.random() * 7 + 4,
+      color:  COLORS[Math.floor(Math.random() * COLORS.length)],
+      spin:   Math.random() * Math.PI * 2,
+      spinV:  (Math.random() - 0.5) * 0.25,
+      shape:  Math.random() < 0.5 ? 'rect' : 'circle',
+      gravity: 0.18 + Math.random() * 0.1,
+      drag:    0.985,
+      alpha:   1,
+      fadeStart: duration * 0.65,
+    }));
+
+    const startTime = performance.now();
+
+    function frame(now) {
+      const elapsed = now - startTime;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      let alive = false;
+      for (const p of particles) {
+        if (p.alpha <= 0) continue;
+        alive = true;
+
+        // Physics
+        p.vy  += p.gravity;
+        p.vx  *= p.drag;
+        p.vy  *= p.drag;
+        p.x   += p.vx;
+        p.y   += p.vy;
+        p.spin += p.spinV;
+
+        // Fade out near end
+        if (elapsed > p.fadeStart) {
+          p.alpha = Math.max(0, 1 - (elapsed - p.fadeStart) / (duration - p.fadeStart));
+        }
+
+        ctx.save();
+        ctx.globalAlpha = p.alpha;
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.spin);
+        ctx.fillStyle = p.color;
+
+        if (p.shape === 'rect') {
+          ctx.fillRect(-p.size / 2, -p.size / 4, p.size, p.size / 2);
+        } else {
+          ctx.beginPath();
+          ctx.arc(0, 0, p.size / 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      if (alive && elapsed < duration + 500) {
+        requestAnimationFrame(frame);
+      } else {
+        canvas.remove();
+      }
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  // ── Toast notification ─────────────────────────────────────────────────────
+  function showConfettiToast(title, sub) {
+    const existing = document.getElementById('confetti-toast');
+    if (existing) existing.remove();
+
+    const toast = document.createElement('div');
+    toast.id = 'confetti-toast';
+    toast.innerHTML = `
+      <div style="font-weight:700;font-size:0.95rem;">${title}</div>
+      <div style="font-size:0.78rem;opacity:0.85;margin-top:2px;">${sub}</div>
+    `;
+    toast.style.cssText = `
+      position:fixed; bottom:5rem; left:50%; transform:translateX(-50%) translateY(20px);
+      background:var(--accent-primary); color:#fff;
+      padding:0.75rem 1.4rem; border-radius:14px;
+      box-shadow:0 8px 28px rgba(0,0,0,0.25);
+      z-index:99998; text-align:center;
+      opacity:0; transition:opacity 0.3s ease, transform 0.3s cubic-bezier(.4,0,.2,1);
+      pointer-events:none; white-space:nowrap;
+      font-family:var(--font-sans);
+    `;
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => {
+      toast.style.opacity = '1';
+      toast.style.transform = 'translateX(-50%) translateY(0)';
+    });
+
+    setTimeout(() => {
+      toast.style.opacity = '0';
+      toast.style.transform = 'translateX(-50%) translateY(10px)';
+      setTimeout(() => toast.remove(), 400);
+    }, 3200);
+  }
+})();
