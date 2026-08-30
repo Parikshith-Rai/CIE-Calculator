@@ -1420,6 +1420,7 @@ function renderSidebar() {
     if (arcReset) arcReset.style.strokeDasharray = '0 283';
     sgpaBreakdownList.innerHTML = '<p class="card-desc text-center" style="margin: 0">Add courses to see GPA breakdown</p>';
     updateStressMeter(0, 0, 0);
+    updateHeatmap();
     return;
   }
   
@@ -1465,6 +1466,7 @@ function renderSidebar() {
   
   updateSidebarSgpaList();
   updateStressMeter(ineligibleCount, warningCount, courses.length);
+  updateHeatmap();
 }
 
 function updateSidebarSgpaList() {
@@ -3324,3 +3326,55 @@ function updateStressMeter(ineligible, warning, total) {
     }, 3200);
   }
 })();
+
+/* ==========================================================================
+   SUBJECT HEATMAP
+   ========================================================================== */
+function updateHeatmap() {
+  const grid = document.getElementById('heatmap-grid');
+  if (!grid) return;
+
+  if (!courses || courses.length === 0) {
+    grid.innerHTML = '<p class="card-desc text-center" style="margin:0;">Add courses to see the heatmap.</p>';
+    return;
+  }
+
+  grid.innerHTML = '';
+
+  courses.forEach((course, i) => {
+    const cie    = calculateCourseCIE(course);
+    const pct    = Math.round((cie / 50) * 100);
+
+    // Tier classification
+    let tier, tierLabel;
+    if (cie < 18)       { tier = 'hm-ineligible'; tierLabel = '🚨 Ineligible'; }
+    else if (cie < 20)  { tier = 'hm-warning';    tierLabel = '⚠️ Warning zone'; }
+    else if (pct < 55)  { tier = 'hm-low';        tierLabel = '📉 Low — needs work'; }
+    else if (pct < 78)  { tier = 'hm-good';       tierLabel = '✅ Good standing'; }
+    else                { tier = 'hm-strong';      tierLabel = '💪 Strong!'; }
+
+    // Short name: first word + abbreviation of rest
+    const words     = course.name.trim().split(/\s+/);
+    const shortName = words.length <= 2
+      ? course.name
+      : words.slice(0, 2).join(' ');
+
+    // Tooltip content
+    const cieLabel  = `CIE: ${cie.toFixed(1)} / 50`;
+    const typeLabel = course.type === 'integrated' ? 'Integrated'
+                    : course.type === 'lab'        ? 'Lab-only'
+                    : 'Non-Integrated';
+    const tooltip   = `${course.name}\n${cieLabel} (${pct}%)\n${typeLabel} · ${course.credits} cr`;
+
+    const cell = document.createElement('div');
+    cell.className = `heatmap-cell ${tier}`;
+    cell.style.animationDelay = `${i * 0.04}s`;
+    cell.innerHTML = `
+      <div class="hm-pct">${pct}%</div>
+      <div class="hm-name">${shortName}</div>
+      <div class="hm-credits">${course.credits} cr</div>
+      <div class="hm-tooltip">${tierLabel}<br>${cieLabel}<br>${typeLabel}</div>
+    `;
+    grid.appendChild(cell);
+  });
+}
