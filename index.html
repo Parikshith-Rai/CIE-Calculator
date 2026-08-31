@@ -258,6 +258,58 @@
         </div>
       </section>
 
+      <!-- CGPA Tracker Card -->
+      <section class="glass-card cgpa-card">
+        <div class="card-header-with-action">
+          <h2 class="card-title">CGPA Tracker</h2>
+          <span id="cgpa-badge" class="cgpa-grade-badge">—</span>
+        </div>
+        <p class="card-desc">Cumulative GPA across all your saved semesters.</p>
+
+        <!-- Big CGPA display -->
+        <div class="cgpa-display-row">
+          <div class="cgpa-arc-wrap">
+            <svg class="cgpa-arc-svg" viewBox="0 0 120 70" xmlns="http://www.w3.org/2000/svg">
+              <!-- Track arc -->
+              <path id="cgpa-arc-track" d="M10,65 A55,55 0 0,1 110,65"
+                fill="none" stroke-width="10" stroke-linecap="round"/>
+              <!-- Fill arc -->
+              <path id="cgpa-arc-fill" d="M10,65 A55,55 0 0,1 110,65"
+                fill="none" stroke-width="10" stroke-linecap="round"
+                stroke-dasharray="0 172"/>
+            </svg>
+            <div class="cgpa-arc-value" id="cgpa-value">—</div>
+            <div class="cgpa-arc-label">CGPA / 10</div>
+          </div>
+
+          <div class="cgpa-meta-col">
+            <div class="cgpa-meta-item">
+              <span class="cgpa-meta-val" id="cgpa-sems">—</span>
+              <span class="cgpa-meta-lbl">Semesters</span>
+            </div>
+            <div class="cgpa-meta-item">
+              <span class="cgpa-meta-val" id="cgpa-credits">—</span>
+              <span class="cgpa-meta-lbl">Total Credits</span>
+            </div>
+            <div class="cgpa-meta-item">
+              <span class="cgpa-meta-val" id="cgpa-best-sem">—</span>
+              <span class="cgpa-meta-lbl">Best Semester</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Per-semester mini bars -->
+        <div id="cgpa-sem-bars" class="cgpa-sem-bars"></div>
+
+        <!-- CGPA target input -->
+        <div class="cgpa-target-row">
+          <label class="cgpa-target-label" for="cgpa-target-input">Target CGPA</label>
+          <input type="number" id="cgpa-target-input" class="input-credits cgpa-target-input"
+            min="0" max="10" step="0.1" placeholder="e.g. 8.5" />
+        </div>
+        <div id="cgpa-target-feedback" class="cgpa-target-feedback"></div>
+      </section>
+
       <!-- CIE Heatmap Card -->
       <section class="glass-card heatmap-card">
         <div class="card-header-with-action">

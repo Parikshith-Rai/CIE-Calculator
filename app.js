@@ -3378,3 +3378,210 @@ function updateHeatmap() {
     grid.appendChild(cell);
   });
 }
+
+/* ==========================================================================
+   CGPA TRACKER
+   ========================================================================== */
+(function () {
+  const ARC_LENGTH = 172; // px length of the half-circle arc path
+
+  // Hook into renderSavedSemesters so CGPA updates whenever semesters change
+  const _origRender = window.renderSavedSemesters || (() => {});
+  const _patchInterval = setInterval(() => {
+    if (typeof renderSavedSemesters === 'function') {
+      clearInterval(_patchInterval);
+      const orig = renderSavedSemesters;
+      window.renderSavedSemesters = function (...args) {
+        orig.apply(this, args);
+        updateCGPA();
+      };
+      updateCGPA(); // initial render
+    }
+  }, 200);
+
+  // Also update when target input changes
+  const targetInput = document.getElementById('cgpa-target-input');
+  if (targetInput) targetInput.addEventListener('input', updateCGPATarget);
+
+  function updateCGPA() {
+    if (typeof savedSemesters === 'undefined' || savedSemesters.length === 0) {
+      resetCGPA();
+      return;
+    }
+
+    // Credit-weighted CGPA = Σ(sgpa × credits) / Σ(credits)
+    let totalWeighted = 0;
+    let totalCredits  = 0;
+    savedSemesters.forEach(s => {
+      totalWeighted += s.sgpa * s.totalCredits;
+      totalCredits  += s.totalCredits;
+    });
+
+    const cgpa    = totalCredits > 0 ? totalWeighted / totalCredits : 0;
+    const best    = savedSemesters.reduce((b, s) => s.sgpa > b.sgpa ? s : b, savedSemesters[0]);
+    const semCount= savedSemesters.length;
+
+    // Update arc
+    const fillLen = (cgpa / 10) * ARC_LENGTH;
+    const arcFill = document.getElementById('cgpa-arc-fill');
+    const arcColor = cgpaColor(cgpa);
+    if (arcFill) {
+      arcFill.setAttribute('stroke-dasharray', `${fillLen} ${ARC_LENGTH}`);
+      arcFill.setAttribute('stroke', arcColor);
+    }
+
+    // Update values
+    setText('cgpa-value',    cgpa.toFixed(2));
+    setText('cgpa-sems',     semCount);
+    setText('cgpa-credits',  totalCredits);
+    setText('cgpa-best-sem', best.name);
+
+    // Grade badge
+    const badge = document.getElementById('cgpa-badge');
+    if (badge) {
+      const { grade, cls } = cgpaGrade(cgpa);
+      badge.textContent = grade;
+      badge.className   = `cgpa-grade-badge ${cls}`;
+    }
+
+    // Per-semester mini bars
+    renderSemBars(cgpa);
+
+    // Refresh target feedback if a target is set
+    updateCGPATarget();
+  }
+
+  function renderSemBars(cgpa) {
+    const wrap = document.getElementById('cgpa-sem-bars');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+
+    savedSemesters.forEach((s, i) => {
+      const pct   = (s.sgpa / 10) * 100;
+      const color = cgpaColor(s.sgpa);
+      const isBest= s.sgpa === Math.max(...savedSemesters.map(x => x.sgpa));
+
+      const row = document.createElement('div');
+      row.className = 'cgpa-sem-row';
+      row.style.animationDelay = `${i * 0.05}s`;
+      row.innerHTML = `
+        <span class="cgpa-sem-name" title="${s.name}">${isBest ? '🏆 ' : ''}${s.name}</span>
+        <div class="cgpa-sem-bar-track">
+          <div class="cgpa-sem-bar-fill" style="width:0%; background:${color}" data-w="${pct}%"></div>
+        </div>
+        <span class="cgpa-sem-val">${s.sgpa.toFixed(2)}</span>
+      `;
+      wrap.appendChild(row);
+    });
+
+    // Animate bars
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      wrap.querySelectorAll('.cgpa-sem-bar-fill').forEach(b => {
+        b.style.width = b.dataset.w;
+      });
+    }));
+  }
+
+  function updateCGPATarget() {
+    const fb  = document.getElementById('cgpa-target-feedback');
+    const inp = document.getElementById('cgpa-target-input');
+    if (!fb || !inp) return;
+
+    const target = parseFloat(inp.value);
+    if (isNaN(target) || inp.value.trim() === '') {
+      fb.className = 'cgpa-target-feedback';
+      return;
+    }
+
+    if (typeof savedSemesters === 'undefined' || savedSemesters.length === 0) {
+      fb.className = 'cgpa-target-feedback visible needs-work';
+      fb.textContent = 'Save at least one semester to see CGPA projections.';
+      return;
+    }
+
+    let totalWeighted = 0, totalCredits = 0;
+    savedSemesters.forEach(s => {
+      totalWeighted += s.sgpa * s.totalCredits;
+      totalCredits  += s.totalCredits;
+    });
+    const currentCGPA = totalCredits > 0 ? totalWeighted / totalCredits : 0;
+
+    if (target > 10 || target <= 0) {
+      fb.className = 'cgpa-target-feedback visible unreachable';
+      fb.textContent = 'Please enter a target between 0.1 and 10.';
+      return;
+    }
+
+    if (currentCGPA >= target) {
+      fb.className = 'cgpa-target-feedback visible on-track';
+      fb.textContent = `✅ You've already hit ${target.toFixed(2)}! Your current CGPA is ${currentCGPA.toFixed(2)}.`;
+      return;
+    }
+
+    // How many more semesters of what SGPA needed?
+    // target = (totalWeighted + n × sgpaNeeded × creditsPerSem) / (totalCredits + n × creditsPerSem)
+    // Assume average credits per semester = totalCredits / semCount (or 22 if no data)
+    const avgCred = savedSemesters.length > 0
+      ? Math.round(totalCredits / savedSemesters.length)
+      : 22;
+
+    // Solve for needed SGPA over next N semesters
+    const results = [];
+    for (let n = 1; n <= 4; n++) {
+      const neededSGPA = (target * (totalCredits + n * avgCred) - totalWeighted) / (n * avgCred);
+      if (neededSGPA <= 10 && neededSGPA > 0) {
+        results.push({ n, neededSGPA });
+        break;
+      }
+    }
+
+    if (results.length === 0) {
+      fb.className = 'cgpa-target-feedback visible unreachable';
+      fb.textContent = `⚠️ Reaching ${target.toFixed(2)} CGPA from ${currentCGPA.toFixed(2)} isn't mathematically possible — even with a 10.0 next semester, it won't get you there in time.`;
+    } else {
+      const { n, neededSGPA } = results[0];
+      const semWord = n === 1 ? 'semester' : 'semesters';
+      const feasible = neededSGPA <= 9.5;
+      fb.className = `cgpa-target-feedback visible ${feasible ? 'needs-work' : 'unreachable'}`;
+      fb.textContent = `To reach ${target.toFixed(2)}, you need an SGPA of ${neededSGPA.toFixed(2)} over the next ${n} ${semWord} (~${avgCred} credits each).`;
+    }
+  }
+
+  function resetCGPA() {
+    setText('cgpa-value',    '—');
+    setText('cgpa-sems',     '—');
+    setText('cgpa-credits',  '—');
+    setText('cgpa-best-sem', '—');
+    const arcFill = document.getElementById('cgpa-arc-fill');
+    if (arcFill) arcFill.setAttribute('stroke-dasharray', `0 ${ARC_LENGTH}`);
+    const badge = document.getElementById('cgpa-badge');
+    if (badge) { badge.textContent = '—'; badge.className = 'cgpa-grade-badge'; }
+    const wrap = document.getElementById('cgpa-sem-bars');
+    if (wrap) wrap.innerHTML = '';
+    const fb = document.getElementById('cgpa-target-feedback');
+    if (fb) fb.className = 'cgpa-target-feedback';
+  }
+
+  function setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  }
+
+  function cgpaColor(v) {
+    if (v >= 9)   return '#34d399';
+    if (v >= 8)   return '#60a5fa';
+    if (v >= 7)   return '#818cf8';
+    if (v >= 6)   return '#fbbf24';
+    if (v >= 5)   return '#f97316';
+    return '#f87171';
+  }
+
+  function cgpaGrade(v) {
+    if (v >= 9)   return { grade: 'O',  cls: 'g-o'  };
+    if (v >= 8)   return { grade: 'A+', cls: 'g-ap' };
+    if (v >= 7)   return { grade: 'A',  cls: 'g-a'  };
+    if (v >= 6)   return { grade: 'B+', cls: 'g-bp' };
+    if (v >= 5)   return { grade: 'B',  cls: 'g-b'  };
+    return              { grade: 'C',  cls: 'g-lo' };
+  }
+})();

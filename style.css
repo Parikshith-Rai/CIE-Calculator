@@ -2720,3 +2720,183 @@ body {
   border-radius: 3px;
   flex-shrink: 0;
 }
+
+/* ============================================================
+   CGPA TRACKER
+   ============================================================ */
+.cgpa-card { overflow: visible; }
+
+/* Grade badge top-right */
+.cgpa-grade-badge {
+  font-family: var(--font-title);
+  font-size: 0.78rem;
+  font-weight: 800;
+  padding: 0.18em 0.65em;
+  border-radius: 8px;
+  background: var(--bg-secondary);
+  border: 1.5px solid var(--card-border);
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  transition: background 0.3s, color 0.3s, border-color 0.3s;
+}
+.cgpa-grade-badge.g-o  { background:rgba(16,185,129,0.15); color:#34d399; border-color:rgba(16,185,129,0.3); }
+.cgpa-grade-badge.g-ap { background:rgba(59,130,246,0.15); color:#60a5fa; border-color:rgba(59,130,246,0.3); }
+.cgpa-grade-badge.g-a  { background:rgba(99,102,241,0.15); color:#818cf8; border-color:rgba(99,102,241,0.3); }
+.cgpa-grade-badge.g-bp { background:rgba(234,179,8,0.15);  color:#fbbf24; border-color:rgba(234,179,8,0.3); }
+.cgpa-grade-badge.g-b  { background:rgba(245,158,11,0.15); color:#f59e0b; border-color:rgba(245,158,11,0.3); }
+.cgpa-grade-badge.g-lo { background:rgba(239,68,68,0.12);  color:#f87171; border-color:rgba(239,68,68,0.25); }
+
+/* Arc + value */
+.cgpa-display-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0.8rem 0 0.6rem;
+}
+.cgpa-arc-wrap {
+  position: relative;
+  width: 110px;
+  flex-shrink: 0;
+  text-align: center;
+}
+.cgpa-arc-svg { width: 110px; height: 68px; display: block; }
+
+#cgpa-arc-track { stroke: var(--bg-secondary); }
+#cgpa-arc-fill  {
+  stroke: var(--accent-primary);
+  transition: stroke-dasharray 0.8s cubic-bezier(.4,0,.2,1), stroke 0.5s ease;
+}
+
+.cgpa-arc-value {
+  position: absolute;
+  bottom: 18px; left: 0; right: 0;
+  font-family: var(--font-title);
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  transition: color 0.4s;
+}
+.cgpa-arc-label {
+  font-size: 0.62rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-top: -2px;
+}
+
+/* Meta column */
+.cgpa-meta-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  flex: 1;
+}
+.cgpa-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.cgpa-meta-val {
+  font-family: var(--font-title);
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+.cgpa-meta-lbl {
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Per-semester mini bars */
+.cgpa-sem-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin: 0.5rem 0 0.9rem;
+}
+.cgpa-sem-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.75rem;
+  animation: cgpaSemIn 0.25s ease both;
+}
+@keyframes cgpaSemIn {
+  from { opacity:0; transform:translateX(-6px); }
+  to   { opacity:1; transform:translateX(0); }
+}
+.cgpa-sem-name {
+  width: 72px;
+  flex-shrink: 0;
+  color: var(--text-secondary);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cgpa-sem-bar-track {
+  flex: 1;
+  height: 7px;
+  background: var(--bg-secondary);
+  border-radius: 999px;
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+}
+.cgpa-sem-bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.7s cubic-bezier(.4,0,.2,1);
+}
+.cgpa-sem-val {
+  width: 32px;
+  text-align: right;
+  font-weight: 700;
+  color: var(--text-primary);
+  flex-shrink: 0;
+  font-size: 0.72rem;
+}
+
+/* Target input */
+.cgpa-target-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+.cgpa-target-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+.cgpa-target-input {
+  flex: 1;
+  text-align: left !important;
+  padding: 0.4rem 0.6rem !important;
+}
+
+/* Target feedback */
+.cgpa-target-feedback {
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border: 1px solid var(--card-border);
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  display: none;
+  animation: cgpaFbIn 0.2s ease;
+}
+.cgpa-target-feedback.visible { display: block; }
+@keyframes cgpaFbIn {
+  from { opacity:0; transform:translateY(4px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.cgpa-target-feedback.on-track  { border-color: rgba(52,211,153,0.35); color: #34d399; background: rgba(52,211,153,0.08); }
+.cgpa-target-feedback.needs-work { border-color: rgba(251,191,36,0.35); color: #fbbf24; background: rgba(251,191,36,0.08); }
+.cgpa-target-feedback.unreachable { border-color: rgba(248,113,113,0.35); color: #f87171; background: rgba(248,113,113,0.08); }
