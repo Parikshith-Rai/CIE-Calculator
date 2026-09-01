@@ -1903,9 +1903,6 @@ function loadPreset(branch, semester) {
   saveState();
   renderApp();
   
-  // Automatically save to "Saved Semesters"
-  saveCurrentSemester(`${branch} Sem ${semester}`);
-  
   const presetLabel = `${branch} · Sem ${semester}`;
   localStorage.setItem('nmit_active_preset', presetLabel);
   const badge = document.getElementById('active-preset-badge');
@@ -1914,7 +1911,7 @@ function loadPreset(branch, semester) {
     badge.style.display = 'inline-flex';
   }
 
-  showToast(`Loaded ${branch} Semester ${semester} preset successfully`, 'success');
+  showToast(`✅ Loaded ${branch} Semester ${semester} — enter your marks to get started!`, 'success');
 }
 
 function clearAllCourses() {
@@ -2207,10 +2204,14 @@ function renderSavedSemesters() {
   if (savedSemesters.length === 0) {
     savedSemestersList.innerHTML = '<p style="text-align:center; color:var(--text-secondary); font-size:0.85rem; margin-top:0.5rem;">No saved semesters.</p>';
     btnCompareSemesters.disabled = true;
+    const _btnLB2 = document.getElementById('btn-leaderboard');
+    if (_btnLB2) _btnLB2.disabled = true;
     return;
   }
   
   btnCompareSemesters.disabled = savedSemesters.length < 2;
+  const _btnLB = document.getElementById('btn-leaderboard');
+  if (_btnLB) _btnLB.disabled = savedSemesters.length < 1;
   
   savedSemesters.forEach(sem => {
     const el = document.createElement('div');

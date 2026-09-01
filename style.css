@@ -2938,6 +2938,10 @@ body {
 }
 
 /* Accent underline on header */
+.app-header {
+  position: sticky;
+  top: 0;
+}
 .app-header::after {
   content: '';
   position: absolute;
@@ -2950,8 +2954,8 @@ body {
   background-size: 200% 100%;
   animation: headerShimmer 4s linear infinite;
   opacity: 0.6;
+  pointer-events: none;
 }
-.app-header { position: sticky; }
 @keyframes headerShimmer {
   0%   { background-position: 0% 0; }
   100% { background-position: 200% 0; }
@@ -2959,10 +2963,7 @@ body {
 
 /* Brand title gradient */
 .main-title {
-  background: linear-gradient(135deg, var(--accent-primary) 0%, hsl(260,80%,62%) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--accent-primary);
   font-size: 1.6rem !important;
   letter-spacing: -0.04em !important;
 }
@@ -2995,7 +2996,6 @@ body {
     0 1px 0 rgba(255,255,255,0.9) inset,
     0 8px 32px rgba(0,0,0,0.09),
     0 2px 8px rgba(0,0,0,0.05) !important;
-  transform: translateY(-1px);
 }
 
 [data-theme="dark"] .glass-card:hover {
@@ -3117,18 +3117,12 @@ body {
 
 .stat-value {
   font-size: 1.45rem !important;
-  background: linear-gradient(135deg, var(--accent-primary), hsl(260,80%,62%));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--accent-primary);
 }
 
 /* ── 9. Section heading polish ─────────────────────────────── */
 .section-heading {
-  background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--text-primary);
 }
 
 /* ── 10. Radial progress ring accent ───────────────────────── */
