@@ -89,6 +89,12 @@
         <h2 class="card-title">CIE Overview</h2>
         <div class="radial-progress-container">
           <svg class="radial-progress" viewBox="0 0 120 120">
+            <defs>
+              <linearGradient id="cieGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%"   stop-color="hsl(215,90%,55%)"/>
+                <stop offset="100%" stop-color="hsl(260,80%,65%)"/>
+              </linearGradient>
+            </defs>
             <circle class="circle-bg" cx="60" cy="60" r="50" fill="none"></circle>
             <circle id="overall-cie-ring" class="circle-progress" cx="60" cy="60" r="50" fill="none"></circle>
           </svg>

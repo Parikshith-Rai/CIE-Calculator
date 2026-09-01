@@ -2900,3 +2900,312 @@ body {
 .cgpa-target-feedback.on-track  { border-color: rgba(52,211,153,0.35); color: #34d399; background: rgba(52,211,153,0.08); }
 .cgpa-target-feedback.needs-work { border-color: rgba(251,191,36,0.35); color: #fbbf24; background: rgba(251,191,36,0.08); }
 .cgpa-target-feedback.unreachable { border-color: rgba(248,113,113,0.35); color: #f87171; background: rgba(248,113,113,0.08); }
+
+/* ============================================================
+   DESIGN REFRESH — NMIT CIE HUB
+   High-impact visual upgrades, no structural changes
+   ============================================================ */
+
+/* ── 1. Richer background ──────────────────────────────────── */
+body {
+  background-color: var(--bg-primary);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% -10%, hsla(215,90%,60%,0.07) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 110%, hsla(260,80%,65%,0.06) 0%, transparent 55%);
+  background-attachment: fixed;
+}
+
+[data-theme="dark"] body,
+[data-theme="dark"]  {
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% -10%, hsla(215,95%,60%,0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 80% 110%, hsla(260,85%,65%,0.09) 0%, transparent 55%);
+}
+
+/* ── 2. Header — frosted, gradient accent line ─────────────── */
+.app-header {
+  background: rgba(255,255,255,0.82) !important;
+  backdrop-filter: blur(20px) saturate(1.6) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.6) !important;
+  border-bottom: 1px solid rgba(0,0,0,0.07) !important;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.04), 0 4px 24px rgba(0,0,0,0.04);
+}
+
+[data-theme="dark"] .app-header {
+  background: rgba(13,16,28,0.82) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.03), 0 4px 24px rgba(0,0,0,0.25);
+}
+
+/* Accent underline on header */
+.app-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    var(--accent-primary) 0%,
+    hsl(260,80%,65%) 50%,
+    var(--accent-primary) 100%);
+  background-size: 200% 100%;
+  animation: headerShimmer 4s linear infinite;
+  opacity: 0.6;
+}
+.app-header { position: sticky; }
+@keyframes headerShimmer {
+  0%   { background-position: 0% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Brand title gradient */
+.main-title {
+  background: linear-gradient(135deg, var(--accent-primary) 0%, hsl(260,80%,62%) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  font-size: 1.6rem !important;
+  letter-spacing: -0.04em !important;
+}
+
+/* ── 3. Glass cards — deeper, more layered ─────────────────── */
+.glass-card {
+  background: rgba(255,255,255,0.75) !important;
+  border: 1px solid rgba(255,255,255,0.9) !important;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.8) inset,
+    0 4px 24px rgba(0,0,0,0.06),
+    0 1px 4px rgba(0,0,0,0.04) !important;
+  border-radius: 16px !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease !important;
+}
+
+[data-theme="dark"] .glass-card {
+  background: rgba(22,27,48,0.75) !important;
+  border: 1px solid rgba(255,255,255,0.07) !important;
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.04) inset,
+    0 4px 24px rgba(0,0,0,0.25),
+    0 1px 4px rgba(0,0,0,0.15) !important;
+}
+
+.glass-card:hover {
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.9) inset,
+    0 8px 32px rgba(0,0,0,0.09),
+    0 2px 8px rgba(0,0,0,0.05) !important;
+  transform: translateY(-1px);
+}
+
+[data-theme="dark"] .glass-card:hover {
+  box-shadow:
+    0 1px 0 rgba(255,255,255,0.05) inset,
+    0 8px 32px rgba(0,0,0,0.35),
+    0 2px 8px rgba(0,0,0,0.2) !important;
+}
+
+/* Card title — stronger hierarchy */
+.card-title {
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.025em !important;
+  color: var(--text-primary);
+}
+
+/* ── 4. Buttons — polished, rounded, with glow ─────────────── */
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent-primary) 0%, hsl(225,85%,52%) 100%) !important;
+  border-radius: 10px !important;
+  box-shadow: 0 2px 12px hsla(215,90%,48%,0.30), 0 1px 3px rgba(0,0,0,0.08) !important;
+  font-size: 0.875rem !important;
+  letter-spacing: 0.01em;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease !important;
+}
+.btn-primary:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px hsla(215,90%,48%,0.38), 0 2px 6px rgba(0,0,0,0.1) !important;
+  filter: brightness(1.06) !important;
+}
+.btn-primary:active { transform: translateY(0px) !important; }
+
+.btn-secondary {
+  background: var(--bg-secondary) !important;
+  border: 1px solid var(--card-border) !important;
+  border-radius: 10px !important;
+  color: var(--text-secondary) !important;
+  font-size: 0.875rem !important;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease !important;
+}
+.btn-secondary:hover {
+  background: var(--card-border) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--accent-primary) !important;
+}
+.btn-secondary:disabled {
+  opacity: 0.4 !important;
+  pointer-events: none !important;
+}
+
+.btn-outline {
+  border-radius: 10px !important;
+}
+.btn-danger-outline {
+  border-radius: 10px !important;
+}
+
+/* Icon buttons — subtle hover ring */
+.btn-icon {
+  border-radius: 10px !important;
+  width: 38px !important; height: 38px !important;
+  transition: background 0.15s, color 0.15s, box-shadow 0.15s !important;
+}
+.btn-icon:hover {
+  background: var(--bg-secondary) !important;
+  box-shadow: 0 0 0 2px var(--accent-primary) !important;
+  color: var(--accent-primary) !important;
+}
+
+/* ── 5. Inputs — cleaner, focused ring ─────────────────────── */
+.input-credits, .input-course-name {
+  border-radius: 8px !important;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+.input-credits:focus {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 3px hsla(215,90%,48%,0.15) !important;
+  outline: none !important;
+}
+.input-course-name:focus {
+  border-color: var(--accent-primary) !important;
+  box-shadow: none !important;
+}
+
+/* ── 6. Course cards — accent bar + subtle top gradient ──────── */
+.course-card {
+  border-left: none !important;
+  border-top: 3px solid var(--accent-primary) !important;
+  border-radius: 16px !important;
+}
+.course-card.integrated {
+  border-top-color: hsl(260,75%,62%) !important;
+}
+.course-card.lab-only {
+  border-top-color: hsl(155,70%,45%) !important;
+}
+
+/* ── 7. SGPA display box — deeper gradient ─────────────────── */
+.gpa-display {
+  background: linear-gradient(135deg,
+    var(--accent-primary) 0%,
+    hsl(240,70%,55%) 100%) !important;
+  border-radius: 14px !important;
+  box-shadow: 0 8px 28px hsla(215,90%,48%,0.28) !important;
+}
+
+/* ── 8. Stat items — cleaner, pill-like ────────────────────── */
+.stat-item {
+  border-radius: 12px !important;
+  background: rgba(0,0,0,0.025) !important;
+  border: 1px solid var(--card-border) !important;
+  transition: border-color 0.15s ease !important;
+}
+[data-theme="dark"] .stat-item {
+  background: rgba(255,255,255,0.025) !important;
+}
+.stat-item:hover { border-color: var(--accent-primary) !important; }
+
+.stat-value {
+  font-size: 1.45rem !important;
+  background: linear-gradient(135deg, var(--accent-primary), hsl(260,80%,62%));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── 9. Section heading polish ─────────────────────────────── */
+.section-heading {
+  background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── 10. Radial progress ring accent ───────────────────────── */
+.circle-progress {
+  stroke: url(#cieGradient) !important;
+}
+
+/* ── 11. Status badges — rounded pill ──────────────────────── */
+.status-badge {
+  border-radius: 999px !important;
+  font-size: 0.78rem !important;
+  padding: 0.3rem 0.85rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.03em !important;
+}
+
+/* ── 12. Board actions gap fix ─────────────────────────────── */
+.board-header {
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--card-border);
+  margin-bottom: 0.5rem;
+}
+
+/* ── 13. Course badge — pill ───────────────────────────────── */
+.course-badge {
+  border-radius: 999px !important;
+  font-size: 0.67rem !important;
+  padding: 0.2em 0.7em !important;
+}
+
+/* ── 14. Saved semester items ──────────────────────────────── */
+.saved-semester-item {
+  border-radius: 10px !important;
+  transition: border-color 0.15s ease, background 0.15s ease !important;
+}
+.saved-semester-item:hover {
+  border-color: var(--accent-primary) !important;
+  background: var(--bg-secondary) !important;
+}
+
+/* ── 15. CIE mark inputs glow ──────────────────────────────── */
+.marks-input-group input:focus {
+  border-color: var(--accent-primary) !important;
+  box-shadow: 0 0 0 3px hsla(215,90%,48%,0.12) !important;
+}
+
+/* ── 16. SGPA items ────────────────────────────────────────── */
+.sgpa-item {
+  border-radius: 10px !important;
+  transition: border-color 0.15s ease !important;
+}
+.sgpa-item:hover { border-color: var(--accent-primary) !important; }
+
+/* ── 17. Modal polish ──────────────────────────────────────── */
+.modal-dialog::backdrop {
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(4px);
+}
+.modal-content {
+  border-radius: 20px !important;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.2) !important;
+}
+
+/* ── 18. Toast styling ─────────────────────────────────────── */
+.toast {
+  border-radius: 12px !important;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.18) !important;
+}
+
+/* ── 19. Scrollbar styling ─────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--card-border);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ── 20. Subtle page footer breathing room ─────────────────── */
+.app-container { padding-bottom: 6rem !important; }
