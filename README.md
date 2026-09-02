@@ -21,6 +21,7 @@ A clean, fully client-side web app for students of **Nitte Meenakshi Institute o
 - **Stress Meter** — a fun animated bar that fills up based on how many courses are at risk (ineligible courses count double). Five levels from 😎 Chill to 🔥 Code Red, with course breakdown pills.
 - **SGPA Leaderboard** — compare all saved semesters with a ranked list (🥇🥈🥉 medals), animated SVG timeline chart, trend pills (e.g. `▲ +0.42 from Sem 1`), and summary stats (best, average, latest trend).
 - **Performance Insights** — personalised feedback on your weakest subjects, ranked by credit-weighted impact on SGPA.
+- **CGPA Tracker** — credit-weighted cumulative GPA across all saved semesters, shown with an animated arc gauge, per-semester mini bars, and a target CGPA calculator that tells you what SGPA you need over future semesters.
 - **Confetti animation** — fires automatically when all courses cross CIE eligibility, or when you hit an SGPA milestone (7.0 ✨, 8.0 🏅, 9.0 🌟). Pure canvas, no libraries.
 
 ### 💾 Data Management
@@ -93,6 +94,7 @@ SGPA is the credit-weighted average of grade points across all eligible courses.
 - **HTML5** — semantic markup, native `<dialog>` for modals
 - **CSS3** — custom properties for theming, glassmorphism cards, responsive grid
 - **Vanilla JavaScript (ES6+)** — no frameworks, no build step, no dependencies
+- **Node.js + Express** — optional local server (`server.js`) for serving the app via `npm start`
 - **Google Fonts** — `Inter` and `Outfit`
 - **`localStorage`** — persists courses, theme, and simulator state
 - **html2canvas** — PNG snapshot for the Share Result Card feature
@@ -106,6 +108,8 @@ nmit-cie-hub/
 ├── index.html        # App markup, header, sidebar, course board, all modals
 ├── style.css         # Theming, layout, glassmorphism, heatmap, stress meter, chatbot
 ├── app.js            # State, CIE/SGPA logic, rendering, events, confetti, chatbot
+├── server.js         # Express server — run locally with npm start
+├── package.json      # Node.js dependencies (express, nodemon)
 ├── README.md
 ├── 404.html          # Page not found error page
 ├── 403.html          # Access denied error page
@@ -118,22 +122,35 @@ nmit-cie-hub/
 
 ## 🚀 Getting Started
 
-No build tools, package managers, or servers required.
+### Option A — Open directly (no setup)
 
 1. **Clone the repo**
    ```bash
    git clone https://github.com/Parikshith-Rai/nmit-cie-hub.git
    cd nmit-cie-hub
    ```
-2. **Open it**
-   - Double-click `index.html`, **or**
-   - Serve locally for the best experience:
-     ```bash
-     npx serve .
-     # or
-     python3 -m http.server 8000
-     ```
-3. Visit the page in your browser and start adding courses.
+2. Double-click `index.html` — done. No install needed.
+
+### Option B — Run with Express (recommended)
+
+1. **Clone the repo**
+   ```bash
+   git clone https://github.com/Parikshith-Rai/nmit-cie-hub.git
+   cd nmit-cie-hub
+   ```
+2. **Install dependencies** (first time only)
+   ```bash
+   npm install
+   ```
+3. **Start the server**
+   ```bash
+   npm start
+   ```
+4. Open `http://localhost:3000` in your browser.
+
+> **Tip:** Use `npm run dev` during development — it uses `nodemon` to auto-restart the server on changes.
+
+The Express server also wires up your custom error pages automatically — `404.html` for missing routes and `500.html` for any server crash.
 
 ### Deploying with GitHub Pages
 
