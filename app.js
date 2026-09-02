@@ -1398,7 +1398,7 @@ function bindCardEvents(cardElement, courseId) {
   
   // Show detailed targets popup
   const targetsBtn = cardElement.querySelector('.btn-view-targets');
-  card.querySelector('.btn-target-score')?.addEventListener('click', () => openTargetScoreModal(course));
+  cardElement.querySelector('.btn-target-score')?.addEventListener('click', () => openTargetScoreModal(course));
   if (targetsBtn) {
     targetsBtn.addEventListener('click', () => {
       showDetailedTargetsToast(course);
