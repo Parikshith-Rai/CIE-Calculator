@@ -632,25 +632,65 @@ function updateUndoRedoButtons() {
 }
 
 // --- CALCULATION HELPER FUNCTIONS ---
+/* ==========================================================================
+   PERFORMANCE — debounce + CIE cache
+   ========================================================================== */
+
+// Debounce: returns a version of fn that only fires after `wait` ms of silence
+function debounce(fn, wait) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), wait);
+  };
+}
+
+// CIE cache: keyed by a fingerprint of the course's mark values
+// Invalidated whenever any mark on that course changes
+const _cieCache = new Map();
+
+function _courseCacheKey(course) {
+  // Only the fields that affect CIE output
+  return `${course.id}|${course.type}|${course.la1}|${course.la2}|${course.mse1}|${course.mse2}|${course.lab}|${course.viva}|${course.finalLab}`;
+}
+
+function invalidateCIECache(courseId) {
+  // Remove all entries for this course (key starts with courseId)
+  for (const key of _cieCache.keys()) {
+    if (key.startsWith(courseId + '|')) _cieCache.delete(key);
+  }
+}
+
+function clearCIECache() {
+  _cieCache.clear();
+}
+
 function calculateCourseCIE(course) {
+  const key = _courseCacheKey(course);
+  if (_cieCache.has(key)) return _cieCache.get(key);
+
+  let result;
   if (course.type === 'lab') {
     const viva = course.viva || 0;
     const finalLab = course.finalLab || 0;
-    return parseFloat((viva + finalLab).toFixed(1));
-  }
-  
-  const mse1Scaled = (course.mse1 || 0) * cieGuidelines.niMseScale;
-  const mse2Scaled = (course.mse2 || 0) * cieGuidelines.niMseScale;
-  const la1Val = course.la1 || 0;
-  const la2Val = course.la2 || 0;
-  
-  if (course.type === 'non-integrated') {
-    return parseFloat((la1Val + la2Val + mse1Scaled + mse2Scaled).toFixed(1));
+    result = parseFloat((viva + finalLab).toFixed(1));
   } else {
-    const theoryPart = la1Val + la2Val + mse1Scaled + mse2Scaled;
-    const labVal = course.lab || 0;
-    return parseFloat(((theoryPart * cieGuidelines.inTheoryWt) + (labVal * cieGuidelines.inPracWt)).toFixed(1));
+    const mse1Scaled = (course.mse1 || 0) * cieGuidelines.niMseScale;
+    const mse2Scaled = (course.mse2 || 0) * cieGuidelines.niMseScale;
+    const la1Val = course.la1 || 0;
+    const la2Val = course.la2 || 0;
+
+    if (course.type === 'non-integrated') {
+      result = parseFloat((la1Val + la2Val + mse1Scaled + mse2Scaled).toFixed(1));
+    } else {
+      const theoryPart = la1Val + la2Val + mse1Scaled + mse2Scaled;
+      const labVal = course.lab || 0;
+      result = parseFloat(((theoryPart * cieGuidelines.inTheoryWt) + (labVal * cieGuidelines.inPracWt)).toFixed(1));
+    }
   }
+
+  _cieCache.set(key, result);
+  return result;
 }
 
 function getCIEStatus(cie) {
@@ -939,6 +979,11 @@ function _addTheoryRows(rows, { la1, la2, mse1, mse2, scale, g }, shortfall, tWt
 }
 
 // --- RENDER APP & DYNAMIC UPDATING ---
+// Debounced version of renderSidebar — fires 120ms after the last keypress
+// Keeps the sidebar (SGPA, stress meter, heatmap, CGPA) from recalculating
+// on every single character typed into a marks input
+const debouncedRenderSidebar = debounce(renderSidebar, 120);
+
 function renderApp() {
   renderCourseBoard();
   renderSidebar();
@@ -1373,8 +1418,9 @@ function bindCardEvents(cardElement, courseId) {
         }
       }
       
+      invalidateCIECache(course.id);
       saveState();
-      renderSidebar();
+      debouncedRenderSidebar();
     });
   });
   
@@ -1868,6 +1914,7 @@ function switchCourseType(id, newType) {
 }
 
 function deleteCourse(id) {
+  invalidateCIECache(id);
   const index = courses.findIndex(c => c.id === id);
   if (index === -1) return;
   
@@ -1915,6 +1962,7 @@ function loadPreset(branch, semester) {
 }
 
 function clearAllCourses() {
+  clearCIECache();
   if (courses.length === 0) return;
   const before = snapshotCourses();
   courses = [];
