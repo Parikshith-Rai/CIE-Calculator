@@ -3207,3 +3207,197 @@ body {
 
 /* ── 20. Subtle page footer breathing room ─────────────────── */
 .app-container { padding-bottom: 6rem !important; }
+
+/* ============================================================
+   SKELETON SHIMMER LOADER
+   ============================================================ */
+.course-skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.skeleton-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: 16px;
+  border-top: 3px solid var(--card-border);
+  padding: 1.4rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  animation: skeletonFadeIn 0.3s ease both;
+}
+@keyframes skeletonFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.skeleton-card:nth-child(2) { animation-delay: 0.08s; }
+
+/* Shimmer keyframe */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+.skeleton-line,
+.skeleton-box {
+  background: linear-gradient(
+    90deg,
+    var(--bg-secondary) 25%,
+    var(--card-border)  50%,
+    var(--bg-secondary) 75%
+  );
+  background-size: 600px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+.skeleton-line { height: 14px; }
+.sk-wide   { width: 65%; }
+.sk-medium { width: 40%; }
+.sk-short  { width: 28%; }
+
+.skeleton-inputs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}
+.skeleton-box {
+  height: 52px;
+  border-radius: 10px;
+}
+
+/* ============================================================
+   MOBILE BOTTOM NAV
+   ============================================================ */
+.mobile-bottom-nav {
+  display: none; /* hidden on desktop */
+}
+
+@media (max-width: 768px) {
+  /* Show bottom nav */
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 8000;
+    background: var(--card-bg);
+    border-top: 1px solid var(--card-border);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 0.4rem 0 calc(0.4rem + env(safe-area-inset-bottom));
+    gap: 0;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+  }
+
+  /* Add bottom padding to body so content isn't hidden behind the nav */
+  body { padding-bottom: 72px; }
+
+  /* Each nav button */
+  .mob-nav-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.45rem 0.25rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-family: var(--font-sans);
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    transition: color 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mob-nav-btn svg {
+    width: 22px; height: 22px;
+    stroke: currentColor;
+    transition: stroke 0.15s;
+  }
+  .mob-nav-btn.active {
+    color: var(--accent-primary);
+  }
+  .mob-nav-btn.active svg {
+    stroke: var(--accent-primary);
+  }
+
+  /* Active indicator dot above icon */
+  .mob-nav-btn.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 28px; height: 3px;
+    background: var(--accent-primary);
+    border-radius: 0 0 4px 4px;
+  }
+  .mob-nav-btn { position: relative; }
+
+  /* Tab panels — hide/show sections based on active tab */
+  .dashboard-layout {
+    display: block !important;
+    position: relative;
+  }
+
+  /* Sidebar becomes a panel that shows/hides */
+  .dashboard-sidebar {
+    display: none;
+    width: 100% !important;
+    margin-bottom: 1rem;
+  }
+  .dashboard-sidebar.mob-active {
+    display: block;
+  }
+
+  /* Course board always full width */
+  .course-board {
+    width: 100% !important;
+  }
+
+  /* Stats tab — show only stat cards */
+  body[data-mob-tab="stats"] .dashboard-sidebar { display: block; }
+  body[data-mob-tab="stats"] .course-board      { display: none; }
+
+  /* Insights tab — show only performance card */
+  body[data-mob-tab="insights"] .dashboard-sidebar { display: block; }
+  body[data-mob-tab="insights"] .course-board      { display: none; }
+
+  /* Tools tab — show only preset + saved semesters cards */
+  body[data-mob-tab="tools"] .dashboard-sidebar { display: block; }
+  body[data-mob-tab="tools"] .course-board      { display: none; }
+
+  /* Courses tab (default) */
+  body[data-mob-tab="courses"] .dashboard-sidebar { display: none; }
+  body[data-mob-tab="courses"] .course-board      { display: block; }
+
+  /* Within stats tab, only show CIE stats + SGPA + stress + heatmap + CGPA */
+  body[data-mob-tab="stats"] .preset-card,
+  body[data-mob-tab="stats"] .saved-semesters-card,
+  body[data-mob-tab="stats"] .performance-card      { display: none; }
+
+  /* Within insights tab, only show performance card */
+  body[data-mob-tab="insights"] .preset-card,
+  body[data-mob-tab="insights"] .saved-semesters-card,
+  body[data-mob-tab="insights"] .stress-meter-card,
+  body[data-mob-tab="insights"] .heatmap-card,
+  body[data-mob-tab="insights"] .cgpa-card           { display: none; }
+
+  /* Within tools tab, only show preset + saved semesters */
+  body[data-mob-tab="tools"] .performance-card,
+  body[data-mob-tab="tools"] .stress-meter-card,
+  body[data-mob-tab="tools"] .heatmap-card,
+  body[data-mob-tab="tools"] .cgpa-card              { display: none; }
+
+  /* Hide chatbot FAB label on mobile to save space */
+  .chatbot-fab-label { display: none !important; }
+  .chatbot-fab { padding: 0.65rem !important; }
+
+  /* Push chatbot FAB above bottom nav */
+  .chatbot-fab { bottom: calc(72px + 1rem) !important; }
+  .chatbot-panel { bottom: calc(72px + 52px + 0.75rem) !important; }
+}

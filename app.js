@@ -994,12 +994,18 @@ function renderCourseBoard() {
   if (courses.length === 0) {
     emptyState.style.display = 'flex';
     courseCardsList.innerHTML = '';
+    const skeleton = document.getElementById('course-skeleton');
+    if (skeleton) skeleton.style.display = 'none';
     return;
   }
   
   emptyState.style.display = 'none';
   courseCardsList.innerHTML = '';
-  
+
+  // Hide skeleton on first real render
+  const skeleton = document.getElementById('course-skeleton');
+  if (skeleton) skeleton.style.display = 'none';
+
   courses.forEach(course => {
     const cie = calculateCourseCIE(course);
     const status = getCIEStatus(cie);
@@ -3633,4 +3639,35 @@ function updateHeatmap() {
     if (v >= 5)   return { grade: 'B',  cls: 'g-b'  };
     return              { grade: 'C',  cls: 'g-lo' };
   }
+})();
+
+/* ==========================================================================
+   MOBILE BOTTOM NAV — tab switching
+   ========================================================================== */
+(function () {
+  const nav = document.getElementById('mobile-bottom-nav');
+  if (!nav) return;
+
+  const TABS = ['courses', 'stats', 'insights', 'tools'];
+  let activeTab = 'courses';
+
+  // Set initial tab attribute
+  document.body.setAttribute('data-mob-tab', activeTab);
+
+  nav.querySelectorAll('.mob-nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.dataset.tab;
+      if (tab === activeTab) return;
+
+      activeTab = tab;
+      document.body.setAttribute('data-mob-tab', tab);
+
+      // Update active class
+      nav.querySelectorAll('.mob-nav-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      // Scroll to top of content when switching tabs
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
 })();

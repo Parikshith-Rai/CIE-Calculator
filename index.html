@@ -398,6 +398,30 @@
         </div>
       </div>
 
+      <!-- Skeleton loader (shown while JS first renders) -->
+      <div id="course-skeleton" class="course-skeleton-list">
+        <div class="skeleton-card">
+          <div class="skeleton-line sk-wide"></div>
+          <div class="skeleton-line sk-medium"></div>
+          <div class="skeleton-inputs">
+            <div class="skeleton-box"></div>
+            <div class="skeleton-box"></div>
+            <div class="skeleton-box"></div>
+            <div class="skeleton-box"></div>
+          </div>
+        </div>
+        <div class="skeleton-card">
+          <div class="skeleton-line sk-wide"></div>
+          <div class="skeleton-line sk-short"></div>
+          <div class="skeleton-inputs">
+            <div class="skeleton-box"></div>
+            <div class="skeleton-box"></div>
+            <div class="skeleton-box"></div>
+            <div class="skeleton-box"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- Course cards container -->
       <div id="course-cards-list" class="course-list-container">
         <!-- Dynamically rendered course cards will go here -->
@@ -798,6 +822,42 @@
       </button>
     </div>
   </div>
+
+  <!-- Mobile Bottom Nav -->
+  <nav class="mobile-bottom-nav" id="mobile-bottom-nav" aria-label="Mobile navigation">
+    <button class="mob-nav-btn active" data-tab="courses">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"></rect>
+        <rect x="14" y="3" width="7" height="7"></rect>
+        <rect x="3" y="14" width="7" height="7"></rect>
+        <rect x="14" y="14" width="7" height="7"></rect>
+      </svg>
+      <span>Courses</span>
+    </button>
+    <button class="mob-nav-btn" data-tab="stats">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="20" x2="18" y2="10"></line>
+        <line x1="12" y1="20" x2="12" y2="4"></line>
+        <line x1="6" y1="20" x2="6" y2="14"></line>
+      </svg>
+      <span>Stats</span>
+    </button>
+    <button class="mob-nav-btn" data-tab="insights">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span>Insights</span>
+    </button>
+    <button class="mob-nav-btn" data-tab="tools">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"></circle>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"></path>
+      </svg>
+      <span>Tools</span>
+    </button>
+  </nav>
 
   <!-- JavaScript Code -->
   <script src="app.js"></script>
