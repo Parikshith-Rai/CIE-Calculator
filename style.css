@@ -3401,3 +3401,158 @@ body {
   .chatbot-fab { bottom: calc(72px + 1rem) !important; }
   .chatbot-panel { bottom: calc(72px + 52px + 0.75rem) !important; }
 }
+/* ==========================================================================
+   COURSE NOTES FIELD
+   ========================================================================== */
+
+.course-notes-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.btn-notes-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.3rem 0;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-family: inherit;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: color 0.15s;
+}
+
+.btn-notes-toggle:hover {
+  color: var(--accent-primary);
+}
+
+.btn-notes-toggle .icon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
+.course-notes-row.has-note .btn-notes-toggle {
+  color: var(--accent-primary);
+}
+
+.course-note-area {
+  display: none;
+  flex-direction: column;
+  gap: 0.25rem;
+  animation: noteSlideIn 0.18s ease;
+}
+
+.course-note-area.visible {
+  display: flex;
+}
+
+@keyframes noteSlideIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.input-course-note {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border-radius: 8px;
+  border: 1px solid var(--card-border);
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 56px;
+  max-height: 160px;
+  box-sizing: border-box;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  line-height: 1.4;
+}
+
+.input-course-note:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 20%, transparent);
+}
+
+.input-course-note::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.note-char-count {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-align: right;
+  line-height: 1;
+}
+
+/* ==========================================================================
+   IMPORT / EXPORT JSON HEADER BUTTONS — tooltip hints
+   ========================================================================== */
+
+#btn-export-json,
+#btn-import-json {
+  position: relative;
+}
+
+#btn-export-json::after {
+  content: 'Export backup';
+}
+#btn-import-json::after {
+  content: 'Import backup';
+}
+
+#btn-export-json::after,
+#btn-import-json::after {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  white-space: nowrap;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  border: 1px solid var(--card-border);
+}
+
+#btn-export-json:hover::after,
+#btn-import-json:hover::after {
+  opacity: 1;
+}
+
+/* PWA install banner (optional future use) */
+.pwa-install-banner {
+  display: none;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  background: var(--accent-primary);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.pwa-install-banner.visible { display: flex; }
+.pwa-install-banner button {
+  margin-left: auto;
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.4);
+  color: #fff;
+  border-radius: 6px;
+  padding: 0.25rem 0.65rem;
+  cursor: pointer;
+  font-size: 0.82rem;
+}

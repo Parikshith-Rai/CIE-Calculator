@@ -278,16 +278,84 @@ document.addEventListener('DOMContentLoaded', () => {
     const key = e.key.toLowerCase();
     const isMac = navigator.platform.toUpperCase().includes('MAC');
     const modKey = isMac ? e.metaKey : e.ctrlKey;
-    if (!modKey || key !== 'z' && key !== 'y') return;
 
+    // Skip if focus is inside a textarea or contenteditable (chatbot, notes)
+    const tag = document.activeElement?.tagName;
+    const isTextArea = tag === 'TEXTAREA' || document.activeElement?.isContentEditable;
+
+    if (!modKey) return;
+
+    // Undo / Redo — always active
     if (key === 'z' && !e.shiftKey) {
       e.preventDefault();
       performUndo();
-    } else if ((key === 'z' && e.shiftKey) || key === 'y') {
+      return;
+    }
+    if ((key === 'z' && e.shiftKey) || key === 'y') {
       e.preventDefault();
       performRedo();
+      return;
+    }
+
+    // Skip other shortcuts if in a text area
+    if (isTextArea) return;
+
+    // Ctrl+N — add a Theory course (most common)
+    if (key === 'n') {
+      e.preventDefault();
+      addCourse('non-integrated');
+      // Scroll course board into view and focus the new card's name input
+      setTimeout(() => {
+        const lastCard = courseCardsList.lastElementChild;
+        if (lastCard) {
+          lastCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          lastCard.querySelector('.input-course-name')?.focus();
+        }
+      }, 60);
+      showToast('New course added — give it a name! (Ctrl+N)', 'success');
+      return;
+    }
+
+    // Ctrl+S — save current semester
+    if (key === 's') {
+      e.preventDefault();
+      const nameInput = document.getElementById('input-semester-name');
+      const name = nameInput?.value?.trim();
+      if (name) {
+        saveCurrentSemester(name);
+        if (nameInput) nameInput.value = '';
+      } else {
+        // Prompt via toast and focus the semester name field
+        showToast('Type a semester name above and press Ctrl+S to save', 'info');
+        nameInput?.focus();
+      }
+      return;
     }
   });
+
+  // ── Import / Export JSON ────────────────────────────────────────────────────
+  const btnExportJson = document.getElementById('btn-export-json');
+  const btnImportJson = document.getElementById('btn-import-json');
+  const importJsonFile = document.getElementById('import-json-file');
+
+  if (btnExportJson) {
+    btnExportJson.addEventListener('click', exportJSON);
+    btnExportJson.title = 'Export JSON backup (all data)';
+  }
+
+  if (btnImportJson) {
+    btnImportJson.addEventListener('click', () => importJsonFile?.click());
+  }
+
+  if (importJsonFile) {
+    importJsonFile.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      importJSON(file);
+      // reset so the same file can be re-imported
+      importJsonFile.value = '';
+    });
+  }
   
   // Font Size controls
   btnFontDec.addEventListener('click', () => changeFontSize(-10));
@@ -561,6 +629,86 @@ function loadState() {
       cieGuidelines = { ...DEFAULT_CIE_GUIDELINES };
     }
   }
+}
+
+// --- IMPORT / EXPORT JSON ---
+function exportJSON() {
+  const payload = {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    courses,
+    savedSemesters,
+    cieGuidelines,
+    theme: localStorage.getItem('theme') || 'dark',
+    fontSize: localStorage.getItem('nmit_font_size') || '100',
+    compactMode: localStorage.getItem('nmit_compact_mode') || 'false',
+    activePreset: localStorage.getItem('nmit_active_preset') || ''
+  };
+
+  const json = JSON.stringify(payload, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  a.href = url;
+  a.download = `nmit-cie-hub-backup-${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Backup downloaded!', 'success');
+}
+
+function importJSON(file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const data = JSON.parse(e.target.result);
+
+      // Basic validation
+      if (!data || typeof data !== 'object') throw new Error('Invalid file format.');
+      if (data.version !== 1) throw new Error('Unsupported backup version.');
+
+      const confirm = window.confirm(
+        'Importing will replace your current courses and saved semesters.\n\nContinue?'
+      );
+      if (!confirm) return;
+
+      // Restore data
+      if (Array.isArray(data.courses)) courses = data.courses;
+      if (Array.isArray(data.savedSemesters)) savedSemesters = data.savedSemesters;
+      if (data.cieGuidelines && typeof data.cieGuidelines === 'object') {
+        cieGuidelines = { ...DEFAULT_CIE_GUIDELINES, ...data.cieGuidelines };
+      }
+
+      // Restore preferences
+      if (data.theme) {
+        localStorage.setItem('theme', data.theme);
+        document.documentElement.setAttribute('data-theme', data.theme);
+      }
+      if (data.fontSize) {
+        localStorage.setItem('nmit_font_size', data.fontSize);
+        document.documentElement.style.fontSize = data.fontSize + '%';
+      }
+      if (data.compactMode) {
+        setCompactMode(data.compactMode === 'true', /* silent */ true);
+      }
+      if (data.activePreset) {
+        localStorage.setItem('nmit_active_preset', data.activePreset);
+        const badge = document.getElementById('active-preset-badge');
+        if (badge) {
+          badge.textContent = data.activePreset;
+          badge.style.display = data.activePreset ? 'inline-flex' : 'none';
+        }
+      }
+
+      clearCIECache();
+      saveState();
+      renderApp();
+      showToast(`Restored ${courses.length} course(s) and ${savedSemesters.length} semester(s)`, 'success');
+    } catch (err) {
+      showToast('Import failed: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
 }
 
 // --- UNDO / REDO ---
@@ -1150,6 +1298,25 @@ function renderCourseBoard() {
       `;
     }
     
+    // Notes section
+    const noteVal = (course.note || '').replace(/"/g, '&quot;');
+    const hasNote = !!course.note?.trim();
+    const notesHTML = `
+      <div class="course-notes-row ${hasNote ? 'has-note' : ''}">
+        <button class="btn-notes-toggle" aria-expanded="${hasNote ? 'true' : 'false'}" title="Add a note">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+          <span>${hasNote ? 'Note' : 'Add note'}</span>
+        </button>
+        <div class="course-note-area ${hasNote ? 'visible' : ''}">
+          <textarea class="input-course-note" placeholder="e.g. MSE re-test pending, check portal for result…" maxlength="280" rows="2" aria-label="Course note">${noteVal}</textarea>
+          <span class="note-char-count">${(course.note || '').length}/280</span>
+        </div>
+      </div>
+    `;
+
     // Footer section (tips/targets)
     const targetsInfo = getSEETargets(cie);
     let footerHTML = '';
@@ -1213,7 +1380,7 @@ function renderCourseBoard() {
       `;
     }
     
-    card.innerHTML = headerHTML + bodyHTML + footerHTML;
+    card.innerHTML = headerHTML + bodyHTML + notesHTML + footerHTML;
     courseCardsList.appendChild(card);
     
     // Add event listeners for inputs
@@ -1435,6 +1602,37 @@ function bindCardEvents(cardElement, courseId) {
   if (typeSelect) {
     typeSelect.addEventListener('change', (e) => {
       switchCourseType(courseId, e.target.value);
+    });
+  }
+
+  // Notes toggle + textarea
+  const notesRow = cardElement.querySelector('.course-notes-row');
+  const notesToggle = cardElement.querySelector('.btn-notes-toggle');
+  const noteArea = cardElement.querySelector('.course-note-area');
+  const noteTextarea = cardElement.querySelector('.input-course-note');
+  const noteCharCount = cardElement.querySelector('.note-char-count');
+
+  if (notesToggle && noteArea && noteTextarea) {
+    notesToggle.addEventListener('click', () => {
+      const isVisible = noteArea.classList.contains('visible');
+      noteArea.classList.toggle('visible', !isVisible);
+      notesToggle.setAttribute('aria-expanded', String(!isVisible));
+      notesToggle.querySelector('span').textContent = (!isVisible && noteTextarea.value.trim()) ? 'Note' : (!isVisible ? 'Note' : (noteTextarea.value.trim() ? 'Note' : 'Add note'));
+      if (!isVisible) noteTextarea.focus();
+    });
+
+    noteTextarea.addEventListener('focus', beginEditSnapshot);
+    noteTextarea.addEventListener('blur', () => {
+      commitEditSnapshot();
+      // Update toggle label based on content
+      const hasContent = !!noteTextarea.value.trim();
+      notesToggle.querySelector('span').textContent = hasContent ? 'Note' : 'Add note';
+      notesRow.classList.toggle('has-note', hasContent);
+    });
+    noteTextarea.addEventListener('input', (e) => {
+      course.note = e.target.value;
+      if (noteCharCount) noteCharCount.textContent = `${e.target.value.length}/280`;
+      saveState();
     });
   }
 
@@ -1853,7 +2051,8 @@ function addCourse(type) {
     lab: type === 'integrated' ? 16 : 0,
     viva: type === 'lab' ? 0 : 0,
     finalLab: type === 'lab' ? 0 : 0,
-    seePredicted: type === 'lab' ? 0 : 80
+    seePredicted: type === 'lab' ? 0 : 80,
+    note: ''
   };
   
   courses.push(newCourse);
@@ -3669,5 +3868,68 @@ function updateHeatmap() {
       // Scroll to top of content when switching tabs
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
+  });
+})();
+/* ==========================================================================
+   PWA — Install prompt handling
+   ========================================================================== */
+(function () {
+  let deferredInstallPrompt = null;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Prevent the default mini-infobar from appearing on mobile
+    e.preventDefault();
+    deferredInstallPrompt = e;
+
+    // Show a subtle toast after a short delay
+    setTimeout(() => {
+      showToast('Install CIE Hub on your phone for offline use! Tap ⋮ → Add to Home Screen.', 'info');
+    }, 3000);
+  });
+
+  window.addEventListener('appinstalled', () => {
+    deferredInstallPrompt = null;
+    showToast('CIE Hub installed! You can now use it offline.', 'success');
+  });
+})();
+
+/* ==========================================================================
+   KEYBOARD SHORTCUT GUIDE — append hint to Guidelines modal footer
+   ========================================================================== */
+(function () {
+  document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('guidelines-modal');
+    if (!modal) return;
+
+    const isMac = navigator.platform?.toUpperCase().includes('MAC');
+    const mod = isMac ? '⌘' : 'Ctrl';
+
+    const shortcutSection = document.createElement('div');
+    shortcutSection.style.cssText = 'margin-top:1.5rem; padding-top:1rem; border-top:1px solid var(--card-border);';
+    shortcutSection.innerHTML = `
+      <h3 style="font-size:0.9rem; font-weight:600; margin-bottom:0.75rem; color:var(--text-secondary);">Keyboard Shortcuts</h3>
+      <div style="display:grid; gap:0.4rem; font-size:0.82rem; color:var(--text-secondary);">
+        <div style="display:flex; justify-content:space-between; gap:1rem;">
+          <span>Add Theory Course</span>
+          <kbd style="background:var(--bg-tertiary); border:1px solid var(--card-border); border-radius:4px; padding:0.1rem 0.4rem; font-size:0.78rem; font-family:monospace;">${mod}+N</kbd>
+        </div>
+        <div style="display:flex; justify-content:space-between; gap:1rem;">
+          <span>Save Semester</span>
+          <kbd style="background:var(--bg-tertiary); border:1px solid var(--card-border); border-radius:4px; padding:0.1rem 0.4rem; font-size:0.78rem; font-family:monospace;">${mod}+S</kbd>
+        </div>
+        <div style="display:flex; justify-content:space-between; gap:1rem;">
+          <span>Undo</span>
+          <kbd style="background:var(--bg-tertiary); border:1px solid var(--card-border); border-radius:4px; padding:0.1rem 0.4rem; font-size:0.78rem; font-family:monospace;">${mod}+Z</kbd>
+        </div>
+        <div style="display:flex; justify-content:space-between; gap:1rem;">
+          <span>Redo</span>
+          <kbd style="background:var(--bg-tertiary); border:1px solid var(--card-border); border-radius:4px; padding:0.1rem 0.4rem; font-size:0.78rem; font-family:monospace;">${mod}+Shift+Z</kbd>
+        </div>
+      </div>
+    `;
+
+    // Append to the end of the modal's scrollable content
+    const modalBody = modal.querySelector('.modal-body') || modal.querySelector('.modal-content');
+    if (modalBody) modalBody.appendChild(shortcutSection);
   });
 })();
